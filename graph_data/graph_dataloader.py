@@ -12,7 +12,6 @@ class NodePredSubGraphDataset(Dataset):
     """
     Node Prediction based on sub-graph
     """
-
     def __init__(self, graph: DGLHeteroGraph, nentity: int, nrelation: int, fanouts: list,
                  special_entity2id: dict, special_relation2id: dict, data_type: str, graph_type: str,
                  bi_directed: bool = True, self_loop: bool = False, edge_dir: str = 'in',
