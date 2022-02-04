@@ -1,6 +1,26 @@
 import torch.nn as nn
 
 
+class Projector(nn.Module):
+    def __init__(self, model_dim: int, hidden_dim: int):
+        super(Projector, self).__init__()
+        self.model_dim = model_dim
+        self.hidden_dim = hidden_dim
+        self.w1 = nn.Linear(self.model_dim, self.hidden_dim, bias=False)
+        self.norm_layer = nn.LayerNorm(self.hidden_dim)
+        self.relu = nn.ReLU(inplace=True)
+        self.w2 = nn.Linear(self.hidden_dim, self.model_dim, bias=False)
+        self.init()
+
+    def init(self):
+        gain = nn.init.calculate_gain('relu')
+        nn.init.xavier_normal_(self.w1.weight, gain=gain)
+        nn.init.xavier_normal_(self.w2.weight, gain=gain)
+
+    def forward(self, x):
+        return self.w2(self.relu(self.norm_layer(self.w1(x))))
+
+
 class SimSiam(nn.Module):
     """
     Build a SimSiam model.
@@ -15,10 +35,11 @@ class SimSiam(nn.Module):
         self.prev_dim = base_encoder_out_dim
         self.graph_encoder = base_encoder
         # build a 2-layer projection
-        self.projector = nn.Sequential(nn.Linear(self.prev_dim, dim, bias=False),
-                                       nn.LayerNorm(dim),
-                                       nn.ReLU(inplace=True),  # hidden layer
-                                       nn.Linear(dim, self.prev_dim))  # output layer
+        # self.projector = nn.Sequential(nn.Linear(self.prev_dim, dim, bias=False),
+        #                                nn.LayerNorm(dim),
+        #                                nn.ReLU(inplace=True),  # hidden layer
+        #                                nn.Linear(dim, self.prev_dim))  # output layer
+        self.projector = Projector(model_dim=self.prev_dim, hidden_dim=dim)
 
     def forward(self, x1, x2, cls_or_anchor='cls'):
         """
