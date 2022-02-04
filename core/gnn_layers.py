@@ -19,6 +19,7 @@ class RGDTLayer(nn.Module):
                  alpha: float = 0.15,
                  feat_drop: float = 0.1,
                  attn_drop: float = 0.1,
+                 edge_drop: float = 0.1,
                  negative_slope: float = 0.2,
                  residual=True,
                  activation=None,
@@ -46,6 +47,7 @@ class RGDTLayer(nn.Module):
 
         self.feat_drop = nn.Dropout(feat_drop)
         self.attn_drop = nn.Dropout(attn_drop)
+        self.edge_drop = edge_drop
 
         self.attn_h = nn.Parameter(torch.FloatTensor(1, self._num_heads, self._head_dim), requires_grad=True)
         self.attn_t = nn.Parameter(torch.FloatTensor(1, self._num_heads, self._head_dim), requires_grad=True)
@@ -121,11 +123,23 @@ class RGDTLayer(nn.Module):
             graph.dstdata.update({'et': et})
             graph.apply_edges(fn.u_add_v('eh', 'et', 'e'))
             e = self.attn_activation(graph.edata.pop('e') + er)
+
+            if self.training and self.edge_drop > 0:
+                perm = torch.randperm(graph.number_of_edges(), device=e.device)
+                bound = int(graph.number_of_edges() * self.edge_drop)
+                eids = perm[bound:]
+                a_value = torch.zeros_like(e)
+                a_value[eids] = edge_softmax(graph, e[eids], eids=eids)
+            else:
+                a_value = edge_softmax(graph, e)
+
             if self.ppr_diff:
-                graph.edata['a'] = edge_softmax(graph, e)
+                # graph.edata['a'] = edge_softmax(graph, e)
+                graph.edata['a'] = a_value
                 rst = self.ppr_estimation(graph=graph)
             else:
-                graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))
+                # graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))
+                graph.edata['a'] = self.attn_drop(a_value)
                 graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
                                  fn.sum('m', 'ft'))
                 rst = graph.dstdata['ft']
@@ -172,6 +186,7 @@ class GDTLayer(nn.Module):
                  alpha: float = 0.15,
                  feat_drop: float = 0.1,
                  attn_drop: float = 0.1,
+                 edge_drop: float = 0.1,
                  negative_slope: float = 0.2,
                  residual=True,
                  activation=None,
@@ -196,6 +211,7 @@ class GDTLayer(nn.Module):
 
         self.feat_drop = nn.Dropout(feat_drop)
         self.attn_drop = nn.Dropout(attn_drop)
+        self.edge_drop = edge_drop
 
         self.attn_h = nn.Parameter(torch.FloatTensor(1, self._num_heads, self._head_dim), requires_grad=True)
         self.attn_t = nn.Parameter(torch.FloatTensor(1, self._num_heads, self._head_dim), requires_grad=True)
@@ -264,11 +280,22 @@ class GDTLayer(nn.Module):
             graph.dstdata.update({'et': et})
             graph.apply_edges(fn.u_add_v('eh', 'et', 'e'))
             e = self.attn_activation(graph.edata.pop('e'))
+            if self.training and self.edge_drop > 0:
+                perm = torch.randperm(graph.number_of_edges(), device=e.device)
+                bound = int(graph.number_of_edges() * self.edge_drop)
+                eids = perm[bound:]
+                a_value = torch.zeros_like(e)
+                a_value[eids] = edge_softmax(graph, e[eids], eids=eids)
+            else:
+                a_value = edge_softmax(graph, e)
+
             if self.ppr_diff:
-                graph.edata['a'] = edge_softmax(graph, e)
+                # graph.edata['a'] = edge_softmax(graph, e)
+                graph.edata['a'] = a_value
                 rst = self.ppr_estimation(graph=graph)
             else:
-                graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))
+                # graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))
+                graph.edata['a'] = self.attn_drop(a_value)
                 graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
                                  fn.sum('m', 'ft'))
                 rst = graph.dstdata['ft']
