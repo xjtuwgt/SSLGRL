@@ -2,7 +2,7 @@ from evens import KG_DATA_FOLDER
 from core.kg_utils import KGDataset, kg_data_path_collection, \
     knowledge_graph_construction_from_triples
 from core.graph_utils import construct_special_graph_dictionary
-from codes.graph_pretrained_dataset import SubGraphPairDataset
+from graph_data.graph_pretrained_dataloader import NodeSubGraphPairDataset
 from torch.utils.data import DataLoader
 import logging
 
@@ -36,11 +36,10 @@ def kg_subgraph_pretrain_dataloader(args):
     args.relation_number = number_of_relations
     logging.info('Number of nodes with 0 in-degree = {}'.format((graph.in_degrees() == 0).sum()))
     fanouts = [int(_) for _ in args.sub_graph_fanouts.split(',')]
-    kg_dataset = SubGraphPairDataset(graph=graph, nentity=number_of_nodes, nrelation=number_of_relations,
-                                           special_entity2id=special_entity_dict,
-                                           special_relation2id=special_relation_dict, fanouts=fanouts)
+    kg_dataset = NodeSubGraphPairDataset(graph=graph, nentity=number_of_nodes, nrelation=number_of_relations,
+                                         special_entity2id=special_entity_dict,
+                                         special_relation2id=special_relation_dict, fanouts=fanouts)
     kg_dataloader = DataLoader(dataset=kg_dataset, batch_size=args.per_gpu_train_batch_size,
-                                     shuffle=True, pin_memory=True, drop_last=True,
-                                     collate_fn=SubGraphPairDataset.collate_fn)
+                               shuffle=True, pin_memory=True, drop_last=True,
+                               collate_fn=NodeSubGraphPairDataset.collate_fn)
     return kg_dataloader
-

@@ -1,6 +1,6 @@
 import torch
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
-from graph_data.graph_pretrained_dataset import NodeSubGraphPairDataset
+from graph_data.graph_pretrained_dataloader import NodeSubGraphPairDataset
 from torch.utils.data import DataLoader
 from core.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
 from torch import nn

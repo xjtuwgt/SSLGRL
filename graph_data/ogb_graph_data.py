@@ -5,7 +5,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from core.gnn_layers import small_init_gain
 from evens import HOME_DATA_FOLDER as ogb_root
-from graph_data.graph_pretrained_dataset import NodeSubGraphPairDataset
+from graph_data.graph_pretrained_dataloader import NodeSubGraphPairDataset
 import logging
 from utils.basic_utils import IGNORE_IDX
 
