@@ -12,7 +12,8 @@ from core.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor,
 
 class NodeSubGraphPairDataset(Dataset):
     def __init__(self, graph: DGLHeteroGraph, nentity: int, nrelation: int, fanouts: list,
-                 special_entity2id: dict, special_relation2id: dict, bi_directed=True, edge_dir='in'):
+                 special_entity2id: dict, special_relation2id: dict, bi_directed=True,
+                 edge_dir='in'):
         assert len(fanouts) > 0
         self.fanouts = fanouts  # list of int == number of hops for sampling
         self.hop_num = len(fanouts)
@@ -85,14 +86,12 @@ class PretrainedGraphDataHelper(object):
                 citation_k_hop_graph_reconstruction(dataset=self.config.citation_node_name,
                                                     hop_num=self.config.sub_graph_hop_num,
                                                     OON=self.config.oon_type)
-            self.node_split_idx = None
         elif self.graph_type == 'ogb':
             graph, node_split_idx, node_features, number_of_nodes, number_of_relations, \
             special_node_dict, special_relation_dict, n_classes, n_feats = ogb_k_hop_graph_reconstruction(
                 dataset=self.config.ogb_node_name,
                 hop_num=self.config.sub_graph_hop_num,
                 OON=self.config.oon_type)
-            self.node_split_idx = node_split_idx
         else:
             raise '{} is not supported'.format(self.graph_type)
         self.graph = graph
@@ -104,7 +103,6 @@ class PretrainedGraphDataHelper(object):
         self.special_entity_dict = special_node_dict
         self.special_relation_dict = special_relation_dict
         self.train_batch_size = self.config.train_batch_size
-        self.val_batch_size = self.config.eval_batch_size
         self.edge_dir = self.config.sub_graph_edge_dir
         self.self_loop = self.config.sub_graph_self_loop  # whether adding self-loop in sub-graph
         self.fanouts = [int(_) for _ in self.config.sub_graph_fanouts.split(',')]
