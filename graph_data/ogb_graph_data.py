@@ -1,6 +1,6 @@
 import torch
 from ogb.nodeproppred import DglNodePropPredDataset
-from core.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
+from utils.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
 from torch import nn
 from core.gnn_layers import small_init_gain
 from evens import HOME_DATA_FOLDER as ogb_root

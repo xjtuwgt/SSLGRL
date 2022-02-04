@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from graph_data.citation_graph_data import citation_k_hop_graph_reconstruction
 from graph_data.ogb_graph_data import ogb_k_hop_graph_reconstruction
-from core.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor, \
+from utils.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor, \
     cls_anchor_sub_graph_augmentation
 
 
@@ -79,7 +79,7 @@ class PretrainedGraphDataHelper(object):
     def __init__(self, config):
         self.config = config
         self.graph_type = self.config.graph_type
-        assert self.graph_type in {'citation', 'ogb'}
+        assert self.graph_type in {'citation', 'ogb', 'kg'}
         if self.graph_type == 'citation':
             graph, node_features, number_of_nodes, number_of_relations, \
             special_node_dict, special_relation_dict, n_classes, n_feats = \
@@ -92,6 +92,10 @@ class PretrainedGraphDataHelper(object):
                 dataset=self.config.ogb_node_name,
                 hop_num=self.config.sub_graph_hop_num,
                 OON=self.config.oon_type)
+        elif self.graph_type == 'kg':
+            graph, number_of_nodes, number_of_relations, special_node_dict, special_relation_dict = \
+                knowledge_graph_khop_reconstruction(dataset=self.config.kg_name, hop_num=self.config.sub_graph_hop_num)
+
         else:
             raise '{} is not supported'.format(self.graph_type)
         self.graph = graph

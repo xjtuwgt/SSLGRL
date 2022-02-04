@@ -1,7 +1,7 @@
 from evens import KG_DATA_FOLDER
-from core.kg_utils import KGDataset, kg_data_path_collection, \
+from utils.kg_utils import KGDataset, kg_data_path_collection, \
     knowledge_graph_construction_from_triples
-from core.graph_utils import construct_special_graph_dictionary
+from utils.graph_utils import construct_special_graph_dictionary
 from graph_data.graph_pretrained_dataloader import NodeSubGraphPairDataset
 from torch.utils.data import DataLoader
 import logging

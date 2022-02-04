@@ -1,6 +1,6 @@
 import torch
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
-from core.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
+from utils.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
 from torch import nn
 from utils.basic_utils import IGNORE_IDX
 from core.gnn_layers import small_init_gain

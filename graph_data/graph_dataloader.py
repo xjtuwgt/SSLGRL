@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from graph_data.citation_graph_data import citation_k_hop_graph_reconstruction, citation_train_valid_test
 from graph_data.ogb_graph_data import ogb_k_hop_graph_reconstruction, ogb_train_valid_test
-from core.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor, cls_anchor_sub_graph_augmentation
+from utils.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor
 
 
 class NodePredSubGraphDataset(Dataset):
