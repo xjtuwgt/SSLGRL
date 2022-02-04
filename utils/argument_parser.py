@@ -98,6 +98,7 @@ def default_parser():
     parser.add_argument('--fix_pred_lr', type=boolean_string, default='false')
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--relation_number', type=int, default=2)
+    parser.add_argument('--num_node_classes', type=int, default=-1)
     parser.add_argument('--relation_emb_dim', type=int, default=300)
     parser.add_argument('--node_number', type=int, default=300)
     parser.add_argument('--node_emb_dim', type=int, default=300)

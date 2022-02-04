@@ -1,7 +1,5 @@
 import torch
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
-from graph_data.graph_pretrained_dataloader import NodeSubGraphPairDataset
-from torch.utils.data import DataLoader
 from core.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
 from torch import nn
 from utils.basic_utils import IGNORE_IDX
@@ -19,7 +17,7 @@ def citation_graph_reconstruction(dataset: str):
     else:
         raise ValueError('Unknown dataset: {}'.format(dataset))
     graph = data[0]
-    n_classes = data.num_labels
+    n_classes = data.num_classes
     node_features = graph.ndata.pop('feat')
     n_feats = node_features.shape[1]
     number_of_edges = graph.number_of_edges()
@@ -70,24 +68,4 @@ def citation_train_valid_test(graph, data_type: str):
     data_node_ids = data_mask.nonzero().squeeze()
     return data_len, data_node_ids
 
-
-def citation_subgraph_pretrain_dataloader(args):
-    graph, node_features, number_of_nodes, number_of_relations, special_entity_dict, \
-    special_relation_dict, n_classes, n_feats = \
-        citation_k_hop_graph_reconstruction(dataset=args.citation_name, hop_num=args.sub_graph_hop_num)
-    logging.info('Number of nodes = {}'.format(number_of_nodes))
-    args.node_number = number_of_nodes
-    logging.info('Node features = {}'.format(n_feats))
-    args.node_emb_dim = n_feats
-    logging.info('Number of relations = {}'.format(number_of_relations))
-    args.relation_number = number_of_relations
-    logging.info('Number of nodes with 0 in-degree = {}'.format((graph.in_degrees() == 0).sum()))
-    fanouts = [int(_) for _ in args.sub_graph_fanouts.split(',')]
-    citation_dataset = NodeSubGraphPairDataset(graph=graph, nentity=number_of_nodes, nrelation=number_of_relations,
-                                           special_entity2id=special_entity_dict,
-                                           special_relation2id=special_relation_dict, fanouts=fanouts)
-    citation_dataloader = DataLoader(dataset=citation_dataset, batch_size=args.per_gpu_pretrain_batch_size,
-                                     shuffle=True, pin_memory=True, drop_last=True,
-                                     collate_fn=NodeSubGraphPairDataset.collate_fn)
-    return citation_dataloader, node_features, n_classes
 

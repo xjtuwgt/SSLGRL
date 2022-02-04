@@ -2,10 +2,8 @@ import torch
 from ogb.nodeproppred import DglNodePropPredDataset
 from core.graph_utils import add_relation_ids_to_graph, construct_special_graph_dictionary
 from torch import nn
-from torch.utils.data import DataLoader
 from core.gnn_layers import small_init_gain
 from evens import HOME_DATA_FOLDER as ogb_root
-from graph_data.graph_pretrained_dataloader import NodeSubGraphPairDataset
 import logging
 from utils.basic_utils import IGNORE_IDX
 
@@ -80,25 +78,3 @@ def ogb_train_valid_test(node_split_idx: dict, data_type: str):
     data_node_ids = node_split_idx[data_type]
     data_len = data_node_ids.shape[0]
     return data_len, data_node_ids
-
-
-def ogb_subgraph_pretrain_dataloader(args):
-    graph, node_split_idx, node_features, number_of_nodes, number_of_relations, special_entity_dict,\
-    special_relation_dict, n_classes, n_feats = \
-        ogb_k_hop_graph_reconstruction(dataset=args.ogb_node_name, hop_num=args.sub_graph_hop_num)
-    logging.info('Number of nodes = {}'.format(number_of_nodes))
-    args.node_number = number_of_nodes
-    logging.info('Node features = {}'.format(n_feats))
-    args.node_emb_dim = n_feats
-    logging.info('Number of relations = {}'.format(number_of_relations))
-    args.relation_number = number_of_relations
-    logging.info('Number of nodes with 0 in-degree = {}'.format((graph.in_degrees() == 0).sum()))
-    fanouts = [int(_) for _ in args.sub_graph_fanouts.split(',')]
-    ogb_dataset = NodeSubGraphPairDataset(graph=graph, nentity=number_of_nodes, nrelation=number_of_relations,
-                                      special_entity2id=special_entity_dict,
-                                      special_relation2id=special_relation_dict, fanouts=fanouts)
-    ogb_dataloader = DataLoader(dataset=ogb_dataset, batch_size=args.per_gpu_pretrain_batch_size,
-                                shuffle=True, pin_memory=True, drop_last=True,
-                                collate_fn=NodeSubGraphPairDataset.collate_fn)
-    return ogb_dataloader, node_features, n_classes
-

@@ -12,28 +12,11 @@ from codes.gnn_encoder import GraphSimSiamEncoder
 
 
 def train_node_classification(args):
-    # if args.graph_type == 'citation':
-    #     pretrain_dataloader, node_features, n_classes = citation_subgraph_pretrain_dataloader(args=args)
-    #     logging.info('Loading pretrained data = {} for {} completed'.format(len(pretrain_dataloader), args.graph_type))
-    #     logging.info('*' * 75)
-    # elif args.graph_type == 'ogb':
-    #     pretrain_dataloader, node_features, n_classes = ogb_subgraph_pretrain_dataloader(args=args)
-    #     logging.info('Loading pretrained data = {} for {} completed'.format(len(pretrain_dataloader), args.graph_type))
-    #     logging.info('*' * 75)
-    # else:
-    #     raise 'Graph type = {} is not supported'.format(args.graph_type)
-    # # **********************************************************************************
-    # if args.graph_type == 'citation':
-    #     node_data_helper = citation_node_pred_subgraph_data_helper(args=args)
-    # elif args.graph_type == 'ogb':
-    #     node_data_helper = ogb_node_pred_subgraph_data_helper(args=args)
-    # else:
-    #     raise 'Graph type: {} is not supported'.format(args.graph_type)
-    # logging.info('Number of classes = {}'.format(node_data_helper.num_class))
     node_data_helper = NodeClassificationSubGraphDataHelper(config=args)
     args.node_number = node_data_helper.number_of_nodes
     args.node_emb_dim = node_data_helper.n_feats
     args.relation_number = node_data_helper.number_of_relations
+    args.num_node_classes = node_data_helper.num_class
     node_features = node_data_helper.node_features
 
     train_dataloader = node_data_helper.data_loader(data_type='train')
@@ -45,7 +28,7 @@ def train_node_classification(args):
     graph_encoder.to(args.device)
     # **********************************************************************************
     model = NodeClassificationModel(graph_encoder=graph_encoder, encoder_dim=args.hidden_dim,
-                                    num_of_classes=node_data_helper.num_class, fix_encoder=False)
+                                    num_of_classes=args.num_node_classes, fix_encoder=False)
     model.to(args.device)
     # **********************************************************************************
     loss_fcn = torch.nn.CrossEntropyLoss(ignore_index=IGNORE_IDX)

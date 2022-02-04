@@ -3,6 +3,9 @@ import torch
 import dgl
 from numpy import random
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+from graph_data.citation_graph_data import citation_k_hop_graph_reconstruction
+from graph_data.ogb_graph_data import ogb_k_hop_graph_reconstruction
 from core.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor, \
     cls_anchor_sub_graph_augmentation
 
@@ -30,7 +33,7 @@ class NodeSubGraphPairDataset(Dataset):
 
     def __getitem__(self, idx):
         anchor_node_ids = torch.LongTensor([idx])
-        samp_hop_num = random.randint(2, self.hop_num+1)
+        samp_hop_num = random.randint(2, self.hop_num + 1)
         samp_fanouts = self.fanouts[:samp_hop_num]
         cls_node_ids = torch.LongTensor([self.special_entity2id['cls']])
         neighbors_dict, node_arw_label_dict, edge_dict = \
@@ -69,3 +72,52 @@ class NodeSubGraphPairDataset(Dataset):
         # +++++++++++++++++++++++++++++++++++++++
         return {'batch_graph_1': (batch_graphs_1, batch_graph_cls, batch_anchor_id),
                 'batch_graph_2': (batch_graphs_2, batch_graph_cls, batch_anchor_id)}
+
+
+class PretrainedGraphDataHelper(object):
+    def __init__(self, config):
+        self.config = config
+        self.graph_type = self.config.graph_type
+        assert self.graph_type in {'citation', 'ogb'}
+        if self.graph_type == 'citation':
+            graph, node_features, number_of_nodes, number_of_relations, \
+            special_node_dict, special_relation_dict, n_classes, n_feats = \
+                citation_k_hop_graph_reconstruction(dataset=self.config.citation_node_name,
+                                                    hop_num=self.config.sub_graph_hop_num,
+                                                    OON=self.config.oon_type)
+            self.node_split_idx = None
+        elif self.graph_type == 'ogb':
+            graph, node_split_idx, node_features, number_of_nodes, number_of_relations, \
+            special_node_dict, special_relation_dict, n_classes, n_feats = ogb_k_hop_graph_reconstruction(
+                dataset=self.config.ogb_node_name,
+                hop_num=self.config.sub_graph_hop_num,
+                OON=self.config.oon_type)
+            self.node_split_idx = node_split_idx
+        else:
+            raise '{} is not supported'.format(self.graph_type)
+        self.graph = graph
+        self.number_of_nodes = number_of_nodes
+        self.number_of_relations = number_of_relations
+        self.num_class = n_classes
+        self.n_feats = n_feats
+        self.node_features = node_features
+        self.special_entity_dict = special_node_dict
+        self.special_relation_dict = special_relation_dict
+        self.train_batch_size = self.config.train_batch_size
+        self.val_batch_size = self.config.eval_batch_size
+        self.edge_dir = self.config.sub_graph_edge_dir
+        self.self_loop = self.config.sub_graph_self_loop  # whether adding self-loop in sub-graph
+        self.fanouts = [int(_) for _ in self.config.sub_graph_fanouts.split(',')]
+
+    def data_loader(self):
+        dataset = NodeSubGraphPairDataset(graph=self.graph,
+                                          nentity=self.number_of_nodes,
+                                          nrelation=self.number_of_relations,
+                                          special_entity2id=self.special_entity_dict,
+                                          special_relation2id=self.special_relation_dict,
+                                          edge_dir=self.edge_dir,
+                                          fanouts=self.fanouts)
+        data_loader = DataLoader(dataset=dataset, batch_size=self.config.per_gpu_pretrain_batch_size,
+                                 shuffle=True, pin_memory=True, drop_last=True,
+                                 collate_fn=NodeSubGraphPairDataset.collate_fn)
+        return data_loader
