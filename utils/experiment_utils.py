@@ -1,7 +1,8 @@
-from graph_data.ogb_graph_data import ogb_node_pred_subgraph_data_helper
-from graph_data.citation_graph_data import citation_node_pred_subgraph_data_helper
-from graph_data.citation_graph_data import citation_subgraph_pretrain_dataloader
-from graph_data.ogb_graph_data import ogb_subgraph_pretrain_dataloader
+# from graph_data.ogb_graph_data import ogb_node_pred_subgraph_data_helper
+# from graph_data.citation_graph_data import citation_node_pred_subgraph_data_helper
+# from graph_data.citation_graph_data import citation_subgraph_pretrain_dataloader
+# from graph_data.ogb_graph_data import ogb_subgraph_pretrain_dataloader
+from graph_data.graph_dataloader import NodeClassificationSubGraphDataHelper
 import logging
 from tqdm import tqdm, trange
 from codes.gnn_predictor import NodeClassificationModel
@@ -11,24 +12,30 @@ from codes.gnn_encoder import GraphSimSiamEncoder
 
 
 def train_node_classification(args):
-    if args.graph_type == 'citation':
-        pretrain_dataloader, node_features, n_classes = citation_subgraph_pretrain_dataloader(args=args)
-        logging.info('Loading pretrained data = {} for {} completed'.format(len(pretrain_dataloader), args.graph_type))
-        logging.info('*' * 75)
-    elif args.graph_type == 'ogb':
-        pretrain_dataloader, node_features, n_classes = ogb_subgraph_pretrain_dataloader(args=args)
-        logging.info('Loading pretrained data = {} for {} completed'.format(len(pretrain_dataloader), args.graph_type))
-        logging.info('*' * 75)
-    else:
-        raise 'Graph type = {} is not supported'.format(args.graph_type)
-    # **********************************************************************************
-    if args.graph_type == 'citation':
-        node_data_helper = citation_node_pred_subgraph_data_helper(args=args)
-    elif args.graph_type == 'ogb':
-        node_data_helper = ogb_node_pred_subgraph_data_helper(args=args)
-    else:
-        raise 'Graph type: {} is not supported'.format(args.graph_type)
-    logging.info('Number of classes = {}'.format(node_data_helper.num_class))
+    # if args.graph_type == 'citation':
+    #     pretrain_dataloader, node_features, n_classes = citation_subgraph_pretrain_dataloader(args=args)
+    #     logging.info('Loading pretrained data = {} for {} completed'.format(len(pretrain_dataloader), args.graph_type))
+    #     logging.info('*' * 75)
+    # elif args.graph_type == 'ogb':
+    #     pretrain_dataloader, node_features, n_classes = ogb_subgraph_pretrain_dataloader(args=args)
+    #     logging.info('Loading pretrained data = {} for {} completed'.format(len(pretrain_dataloader), args.graph_type))
+    #     logging.info('*' * 75)
+    # else:
+    #     raise 'Graph type = {} is not supported'.format(args.graph_type)
+    # # **********************************************************************************
+    # if args.graph_type == 'citation':
+    #     node_data_helper = citation_node_pred_subgraph_data_helper(args=args)
+    # elif args.graph_type == 'ogb':
+    #     node_data_helper = ogb_node_pred_subgraph_data_helper(args=args)
+    # else:
+    #     raise 'Graph type: {} is not supported'.format(args.graph_type)
+    # logging.info('Number of classes = {}'.format(node_data_helper.num_class))
+    node_data_helper = NodeClassificationSubGraphDataHelper(config=args)
+    args.node_number = node_data_helper.number_of_nodes
+    args.node_emb_dim = node_data_helper.n_feats
+    args.relation_number = node_data_helper.number_of_relations
+    node_features = node_data_helper.node_features
+
     train_dataloader = node_data_helper.data_loader(data_type='train')
     logging.info('Loading training data = {} completed'.format(len(train_dataloader)))
     logging.info('*' * 75)

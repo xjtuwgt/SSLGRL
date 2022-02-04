@@ -83,7 +83,7 @@ def default_parser():
     parser.add_argument('--kg_name', type=str, default='FB15k-237')
     parser.add_argument('--kg_bi_directed', type=boolean_string, default='true')
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    parser.add_argument('--citation_name', type=str, default='cora')
+    parser.add_argument('--citation_node_name', type=str, default='cora')
     parser.add_argument('--ogb_node_name', type=str, default='ogbn-arxiv')
     parser.add_argument('--graph_type', type=str, default='citation', choices=["citation", "ogb", "kg"])
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -93,6 +93,7 @@ def default_parser():
     parser.add_argument('--sub_graph_self_loop', type=boolean_string, default='true')
     parser.add_argument('--arw_position', type=boolean_string, default='false')
     parser.add_argument('--cls_or_anchor', type=str, default='cls', choices=["cls", "anchor"])
+    parser.add_argument('--oon_type', type=str, default='zero', choices=["zero", "one", "rand"])
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--fix_pred_lr', type=boolean_string, default='false')
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
