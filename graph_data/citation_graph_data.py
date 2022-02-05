@@ -65,7 +65,6 @@ def citation_train_valid_test(graph, data_type: str):
     else:
         raise 'Data type = {} is not supported'.format(data_type)
     data_len = data_mask.int().sum().item()
-    data_node_ids = data_mask.nonzero().squeeze()
+    # data_node_ids = data_mask.nonzero().squeeze()
+    data_node_ids = data_mask.nonzero(as_tuple=True)[0]
     return data_len, data_node_ids
-
-
