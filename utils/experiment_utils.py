@@ -30,6 +30,10 @@ def train_node_classification(args):
     model = NodeClassificationModel(graph_encoder=graph_encoder, encoder_dim=args.hidden_dim,
                                     num_of_classes=args.num_node_classes, fix_encoder=False)
     model.to(args.device)
+    logging.info('Model Parameter Configuration:')
+    for name, param in model.named_parameters():
+        logging.info('Parameter {}: {}, require_grad = {}'.format(name, str(param.size()),
+                                                                  str(param.requires_grad)))
     # **********************************************************************************
     loss_fcn = torch.nn.CrossEntropyLoss(ignore_index=IGNORE_IDX)
     optimizer = torch.optim.Adam(
