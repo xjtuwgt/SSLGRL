@@ -92,7 +92,7 @@ def default_parser():
     parser.add_argument('--sub_graph_edge_dir', type=str, default='in', choices=['in', 'out'])
     parser.add_argument('--sub_graph_self_loop', type=boolean_string, default='true')
     parser.add_argument('--arw_position', type=boolean_string, default='true')
-    parser.add_argument('--cls_or_anchor', type=str, default='anchor', choices=["cls", "anchor"])
+    parser.add_argument('--cls_or_anchor', type=str, default='cls', choices=["cls", "anchor"])
     parser.add_argument('--oon_type', type=str, default='zero', choices=["zero", "one", "rand"])
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--fix_pred_lr', type=boolean_string, default='false')
@@ -129,7 +129,7 @@ def default_parser():
     parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
     # learning and log ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--seed', type=int, default=45, help="random seed for initialization")
-    parser.add_argument("--num_pretrain_epochs", default=150.0, type=float,
+    parser.add_argument("--num_pretrain_epochs", default=200.0, type=float,
                         help="Total number of pre-training epochs to perform.")
     parser.add_argument("--num_train_epochs", default=150.0, type=float,
                         help="Total number of training epochs to perform.")
