@@ -119,7 +119,7 @@ def default_parser():
     parser.add_argument('--layers', type=int, default=6)
     parser.add_argument('--negative_slope', type=float, default=0.2)
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    parser.add_argument('--eval_batch_size', type=int, default=32)
+    parser.add_argument('--eval_batch_size', type=int, default=16)
     parser.add_argument('--per_gpu_pretrain_batch_size', type=int, default=16)
     parser.add_argument('--train_batch_size', type=int, default=16)
     # Environment+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
