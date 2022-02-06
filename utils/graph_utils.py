@@ -233,9 +233,10 @@ def sub_graph_cls_addition(subgraph, cls_parent_node_id: int, special_relation_d
 
 def cls_sub_graph_extractor(graph, edge_dict: dict, neighbors_dict: dict, special_relation_dict: dict,
                             node_arw_label_dict: dict, bi_directed: bool = True, self_loop: bool = False,
-                            debug=False):
+                            cls_addition: bool = False, debug=False):
     """
     extract the sub-graph according to edge_dict and then add cls_node as super node
+    :param cls_addition:
     :param graph: original large graph
     :param edge_dict: sampling edges
     :param neighbors_dict: multi-hop information
@@ -249,9 +250,13 @@ def cls_sub_graph_extractor(graph, edge_dict: dict, neighbors_dict: dict, specia
     start_time = time() if debug else 0
     subgraph = sub_graph_extractor(graph=graph, edge_dict=edge_dict, bi_directed=bi_directed,
                                    neighbors_dict=neighbors_dict)
-    cls_parent_node_id = neighbors_dict['cls'][0][0].data.item()
-    subgraph, parent2sub_dict = sub_graph_cls_addition(subgraph=subgraph, cls_parent_node_id=cls_parent_node_id,
-                                                       special_relation_dict=special_relation_dict)
+    if cls_addition:
+        cls_parent_node_id = neighbors_dict['cls'][0][0].data.item()
+        subgraph, parent2sub_dict = sub_graph_cls_addition(subgraph=subgraph, cls_parent_node_id=cls_parent_node_id,
+                                                           special_relation_dict=special_relation_dict)
+    else:
+        parent_node_ids, sub_node_ids = subgraph.ndata['nid'].tolist(), subgraph.nodes().tolist()
+        parent2sub_dict = dict(zip(parent_node_ids, sub_node_ids))
     assert len(parent2sub_dict) == len(node_arw_label_dict) and len(parent2sub_dict) == subgraph.number_of_nodes()
     node_orders = torch.zeros(len(parent2sub_dict), dtype=torch.long)
     for key, value in parent2sub_dict.items():
