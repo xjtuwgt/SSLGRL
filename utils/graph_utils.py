@@ -232,7 +232,8 @@ def sub_graph_cls_addition(subgraph, cls_parent_node_id: int, special_relation_d
 
 
 def cls_sub_graph_extractor(graph, edge_dict: dict, neighbors_dict: dict, special_relation_dict: dict,
-                            node_arw_label_dict: dict, bi_directed: bool = True, self_loop: bool = False, debug=False):
+                            node_arw_label_dict: dict, bi_directed: bool = True, self_loop: bool = False,
+                            debug=False):
     """
     extract the sub-graph according to edge_dict and then add cls_node as super node
     :param graph: original large graph
