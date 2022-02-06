@@ -18,12 +18,6 @@ class GDTEncoder(nn.Module):
             arw_position_num = self.config.sub_graph_hop_num + 2
             self.arw_position_embed_layer = EmbeddingLayer(num=arw_position_num,
                                                            dim=self.config.node_emb_dim)
-            # if self.config.node_emb_dim == self.config.arw_pos_emb_dim:
-
-            # else:
-            #     self.arw_position_embed_layer = EmbeddingLayer(num=arw_position_num,
-            #                                                    dim=self.config.arw_pos_emb_dim,
-            #                                                    project_dim=self.config.node_emb_dim)
         self.graph_encoder = nn.ModuleList()
         self.graph_encoder.append(module=RGDTLayer(in_ent_feats=self.config.node_emb_dim,
                                                    in_rel_feats=self.config.relation_emb_dim,
