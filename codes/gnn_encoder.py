@@ -78,6 +78,12 @@ class GDTEncoder(nn.Module):
                 self.arw_position_embed_layer.init()
 
     def forward(self, batch_g_pair, cls_or_anchor='cls'):
+        if self.config.relation_encoder:
+            return self.rel_forward(batch_g_pair=batch_g_pair, cls_or_anchor=cls_or_anchor)
+        else:
+            return self.no_rel_forward(batch_g_pair=batch_g_pair, cls_or_anchor=cls_or_anchor)
+
+    def rel_forward(self, batch_g_pair, cls_or_anchor='cls'):
         batch_g = batch_g_pair[0]
         ent_ids = batch_g.ndata['nid']
         rel_ids = batch_g.edata['rid']
@@ -94,6 +100,27 @@ class GDTEncoder(nn.Module):
                     h = self.graph_encoder[_](batch_g, h, rel_features)
                 else:
                     h = self.graph_encoder[_](batch_g, h)
+            if cls_or_anchor == 'cls':
+                batch_node_ids = batch_g_pair[1]
+            elif cls_or_anchor == 'anchor':
+                batch_node_ids = batch_g_pair[2]
+            else:
+                raise '{} is not supported'.format(cls_or_anchor)
+            batch_graph_embed = h[batch_node_ids]
+            return batch_graph_embed
+
+    def no_rel_forward(self, batch_g_pair, cls_or_anchor='cls'):
+        batch_g = batch_g_pair[0]
+        ent_ids = batch_g.ndata['nid']
+        ent_features = self.node_embed_layer(ent_ids)
+        if self.config.arw_position:
+            arw_positions = batch_g.ndata['n_rw_label']
+            arw_pos_embed = self.arw_position_embed_layer(arw_positions)
+            ent_features = ent_features + arw_pos_embed
+        with batch_g.local_scope():
+            h = ent_features
+            for _ in range(self.config.layers):
+                h = self.graph_encoder[_](batch_g, h)
             if cls_or_anchor == 'cls':
                 batch_node_ids = batch_g_pair[1]
             elif cls_or_anchor == 'anchor':
