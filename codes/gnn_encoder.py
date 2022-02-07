@@ -13,23 +13,39 @@ class GDTEncoder(nn.Module):
         super(GDTEncoder, self).__init__()
         self.config = config
         self.node_embed_layer = EmbeddingLayer(num=self.config.node_number, dim=self.config.node_emb_dim)
-        self.relation_embed_layer = EmbeddingLayer(num=self.config.relation_number, dim=self.config.relation_emb_dim)
+        if self.config.relation_encoder:
+            self.relation_embed_layer = EmbeddingLayer(num=self.config.relation_number,
+                                                       dim=self.config.relation_emb_dim)
+        else:
+            self.relation_embed_layer = None
         if self.config.arw_position:
             arw_position_num = self.config.sub_graph_hop_num + 2
             self.arw_position_embed_layer = EmbeddingLayer(num=arw_position_num,
                                                            dim=self.config.node_emb_dim)
         self.graph_encoder = nn.ModuleList()
-        self.graph_encoder.append(module=RGDTLayer(in_ent_feats=self.config.node_emb_dim,
-                                                   in_rel_feats=self.config.relation_emb_dim,
-                                                   out_ent_feats=self.config.hidden_dim,
-                                                   num_heads=self.config.head_num,
-                                                   hop_num=self.config.gnn_hop_num,
-                                                   alpha=self.config.alpha,
-                                                   feat_drop=self.config.feat_drop,
-                                                   attn_drop=self.config.attn_drop,
-                                                   residual=self.config.residual,
-                                                   diff_head_tail=self.config.diff_head_tail,
-                                                   ppr_diff=self.config.ppr_diff))
+        if self.config.relation_encoder:
+            self.graph_encoder.append(module=RGDTLayer(in_ent_feats=self.config.node_emb_dim,
+                                                       in_rel_feats=self.config.relation_emb_dim,
+                                                       out_ent_feats=self.config.hidden_dim,
+                                                       num_heads=self.config.head_num,
+                                                       hop_num=self.config.gnn_hop_num,
+                                                       alpha=self.config.alpha,
+                                                       feat_drop=self.config.feat_drop,
+                                                       attn_drop=self.config.attn_drop,
+                                                       residual=self.config.residual,
+                                                       diff_head_tail=self.config.diff_head_tail,
+                                                       ppr_diff=self.config.ppr_diff))
+        else:
+            self.graph_encoder.append(module=GDTLayer(in_ent_feats=self.config.node_emb_dim,
+                                                      out_ent_feats=self.config.hidden_dim,
+                                                      num_heads=self.config.head_num,
+                                                      hop_num=self.config.gnn_hop_num,
+                                                      alpha=self.config.alpha,
+                                                      feat_drop=self.config.feat_drop,
+                                                      attn_drop=self.config.attn_drop,
+                                                      residual=self.config.residual,
+                                                      diff_head_tail=self.config.diff_head_tail,
+                                                      ppr_diff=self.config.ppr_diff))
         for _ in range(1, self.config.layers):
             self.graph_encoder.append(module=GDTLayer(in_ent_feats=self.config.hidden_dim,
                                                       out_ent_feats=self.config.hidden_dim,
@@ -49,6 +65,7 @@ class GDTEncoder(nn.Module):
         else:
             self.node_embed_layer.init()
         if graph_rel_emb is not None:
+            assert self.relation_embed_layer is not None
             self.relation_embed_layer.init_with_tensor(data=graph_rel_emb, freeze=freeze)
             logging.info('Initializing relation embedding with pretrained embeddings')
         else:
