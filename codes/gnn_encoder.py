@@ -58,20 +58,24 @@ class GDTEncoder(nn.Module):
                                                       diff_head_tail=self.config.diff_head_tail,
                                                       ppr_diff=self.config.ppr_diff))
 
-    def init(self, graph_node_emb: Tensor = None, graph_rel_emb: Tensor = None, freeze=False):
+    def init(self, graph_node_emb: Tensor = None, graph_rel_emb: Tensor = None, pos_emb: Tensor = None,
+             node_freeze=False, rel_freeze=False, pos_freeze=False):
         if graph_node_emb is not None:
-            self.node_embed_layer.init_with_tensor(data=graph_node_emb, freeze=freeze)
+            self.node_embed_layer.init_with_tensor(data=graph_node_emb, freeze=node_freeze)
             logging.info('Initializing node features with pretrained embeddings')
         else:
             self.node_embed_layer.init()
-        if graph_rel_emb is not None:
-            assert self.relation_embed_layer is not None
-            self.relation_embed_layer.init_with_tensor(data=graph_rel_emb, freeze=freeze)
-            logging.info('Initializing relation embedding with pretrained embeddings')
-        else:
-            self.relation_embed_layer.init()
+        if self.config.relation_encoder:
+            if graph_rel_emb is not None:
+                self.relation_embed_layer.init_with_tensor(data=graph_rel_emb, freeze=rel_freeze)
+                logging.info('Initializing relation embedding with pretrained embeddings')
+            else:
+                self.relation_embed_layer.init()
         if self.config.arw_position:
-            self.arw_position_embed_layer.init()
+            if pos_emb is not None:
+                self.arw_position_embed_layer.init_with_tensor(data=pos_emb, freeze=pos_freeze)
+            else:
+                self.arw_position_embed_layer.init()
 
     def forward(self, batch_g_pair, cls_or_anchor='cls'):
         batch_g = batch_g_pair[0]
