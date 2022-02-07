@@ -24,7 +24,7 @@ def train_node_classification(args):
     logging.info('*' * 75)
     # **********************************************************************************
     graph_encoder = GraphSimSiamEncoder(config=args)
-    graph_encoder.init(graph_node_emb=node_features, freeze=True)
+    graph_encoder.init(graph_node_emb=node_features, node_freeze=True)
     graph_encoder.to(args.device)
     # **********************************************************************************
     model = NodeClassificationModel(graph_encoder=graph_encoder, encoder_dim=args.hidden_dim,
