@@ -7,8 +7,8 @@ class Projector(nn.Module):
         self.model_dim = model_dim
         self.hidden_dim = hidden_dim
         self.w1 = nn.Linear(self.model_dim, self.hidden_dim, bias=False)
-        # self.norm_layer = nn.LayerNorm(self.hidden_dim)
-        self.norm_layer = nn.BatchNorm1d(self.hidden_dim)
+        self.norm_layer = nn.LayerNorm(self.hidden_dim)
+        # self.norm_layer = nn.BatchNorm1d(self.hidden_dim)
         self.relu = nn.ReLU(inplace=True)
         self.w2 = nn.Linear(self.hidden_dim, self.model_dim, bias=False)
         self.init()
