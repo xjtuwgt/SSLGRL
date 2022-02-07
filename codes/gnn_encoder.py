@@ -114,9 +114,14 @@ class GraphSimSiamEncoder(nn.Module):
                                           base_encoder_out_dim=self.config.hidden_dim,
                                           dim=self.config.siam_dim)
 
-    def init(self, graph_node_emb: Tensor = None, graph_rel_emb: Tensor = None, freeze=True):
-        self.graph_siam_encoder.graph_encoder.init(graph_node_emb=graph_node_emb, graph_rel_emb=graph_rel_emb,
-                                                   freeze=freeze)
+    def init(self, graph_node_emb: Tensor = None, graph_rel_emb: Tensor = None, pos_emb: Tensor = None,
+             node_freeze=False, rel_freeze=False, pos_freeze=False):
+        self.graph_siam_encoder.graph_encoder.init(graph_node_emb=graph_node_emb,
+                                                   graph_rel_emb=graph_rel_emb,
+                                                   pos_emb=pos_emb,
+                                                   node_freeze=node_freeze,
+                                                   rel_freeze=rel_freeze,
+                                                   pos_freeze=pos_freeze)
 
     def forward(self, batch, cls_or_anchor='cls'):
         p1, p2, z1, z2 = self.graph_siam_encoder(batch['batch_graph_1'], batch['batch_graph_2'], cls_or_anchor)
