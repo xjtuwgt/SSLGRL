@@ -254,10 +254,11 @@ def cls_sub_graph_extractor(graph, edge_dict: dict, neighbors_dict: dict, specia
         cls_parent_node_id = neighbors_dict['cls'][0][0].data.item()
         subgraph, parent2sub_dict = sub_graph_cls_addition(subgraph=subgraph, cls_parent_node_id=cls_parent_node_id,
                                                            special_relation_dict=special_relation_dict)
+        assert len(parent2sub_dict) == len(node_arw_label_dict)
     else:
         parent_node_ids, sub_node_ids = subgraph.ndata['nid'].tolist(), subgraph.nodes().tolist()
         parent2sub_dict = dict(zip(parent_node_ids, sub_node_ids))
-    assert len(parent2sub_dict) == len(node_arw_label_dict) and len(parent2sub_dict) == subgraph.number_of_nodes()
+    assert len(parent2sub_dict) == subgraph.number_of_nodes()
     node_orders = torch.zeros(len(parent2sub_dict), dtype=torch.long)
     for key, value in parent2sub_dict.items():
         node_orders[value] = node_arw_label_dict[key]
