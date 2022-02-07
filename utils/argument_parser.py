@@ -93,6 +93,7 @@ def default_parser():
     parser.add_argument('--sub_graph_self_loop', type=boolean_string, default='false')
     parser.add_argument('--arw_position', type=boolean_string, default='true')
     parser.add_argument('--cls_or_anchor', type=str, default='anchor', choices=["cls", "anchor"])
+    parser.add_argument('--cls_addition', type=boolean_string, default='true')
     parser.add_argument('--oon_type', type=str, default='zero', choices=["zero", "one", "rand"])
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--fix_pred_lr', type=boolean_string, default='false')

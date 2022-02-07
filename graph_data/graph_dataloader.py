@@ -15,8 +15,8 @@ class NodePredSubGraphDataset(Dataset):
     """
     def __init__(self, graph: DGLHeteroGraph, nentity: int, nrelation: int, fanouts: list,
                  special_entity2id: dict, special_relation2id: dict, data_type: str, graph_type: str,
-                 bi_directed: bool = True, self_loop: bool = False, edge_dir: str = 'in',
-                 node_split_idx: dict = None, training: bool = False):
+                 bi_directed: bool = True, self_loop: bool = True, edge_dir: str = 'in',
+                 node_split_idx: dict = None, cls_node: bool = False, training: bool = False):
         assert len(fanouts) > 0 and (data_type in {'train', 'valid', 'test'})
         assert graph_type in {'citation', 'ogb'}
         self.fanouts = fanouts  # list of int == number of hops for sampling
@@ -36,6 +36,7 @@ class NodePredSubGraphDataset(Dataset):
         self.bi_directed = bi_directed
         self.edge_dir = edge_dir  # "in", "out"
         self.self_loop = self_loop
+        self.cls_node = cls_node
         self.special_entity2id, self.special_relation2id = special_entity2id, special_relation2id
         self.training = training
 
@@ -60,6 +61,7 @@ class NodePredSubGraphDataset(Dataset):
                                                             special_relation_dict=self.special_relation2id,
                                                             node_arw_label_dict=node_arw_label_dict,
                                                             self_loop=self.self_loop,
+                                                            cls_addition=self.cls_node,
                                                             bi_directed=self.bi_directed, debug=False)
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # subgraph = cls_anchor_sub_graph_augmentation(subgraph=subgraph, parent2sub_dict=parent2sub_dict,
@@ -122,6 +124,10 @@ class NodeClassificationSubGraphDataHelper(object):
         self.train_batch_size = self.config.train_batch_size
         self.val_batch_size = self.config.eval_batch_size
         self.edge_dir = self.config.sub_graph_edge_dir
+        self.cls_addition = self.config.cls_addition
+        if self.config.cls_or_anchor == 'cls':
+            assert self.cls_addition
+            self.cls_addition = self.config.cls_addition
         self.self_loop = self.config.sub_graph_self_loop  # whether adding self-loop in sub-graph
         # self.fanouts = [int(_) for _ in self.config.sub_graph_fanouts.split(',')]
         self.fanouts = [-1 for _ in self.config.sub_graph_fanouts.split(',')]
@@ -137,6 +143,7 @@ class NodeClassificationSubGraphDataHelper(object):
                                           graph_type=self.graph_type,
                                           edge_dir=self.edge_dir,
                                           self_loop=self.self_loop,
+                                          cls_node=self.cls_addition,
                                           fanouts=self.fanouts,
                                           node_split_idx=self.node_split_idx,
                                           training=data_type in {'train'})
