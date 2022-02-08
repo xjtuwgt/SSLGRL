@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from graph_data.citation_graph_data import citation_k_hop_graph_reconstruction, citation_train_valid_test
 from graph_data.ogb_graph_data import ogb_k_hop_graph_reconstruction, ogb_train_valid_test
-from utils.graph_utils import sub_graph_neighbor_sample, cls_sub_graph_extractor
+from utils.graph_utils import sub_graph_neighbor_sample, anchor_node_sub_graph_extractor
 
 
 class NodePredSubGraphDataset(Dataset):
@@ -39,6 +39,7 @@ class NodePredSubGraphDataset(Dataset):
         self.cls_node = cls_node
         self.special_entity2id, self.special_relation2id = special_entity2id, special_relation2id
         self.training = training
+        self.samp_type = 'ns'
 
     def __len__(self):
         return self.len
@@ -52,22 +53,18 @@ class NodePredSubGraphDataset(Dataset):
         else:
             samp_fanouts = self.fanouts
         cls_node_ids = torch.LongTensor([self.special_entity2id['cls']])
-        neighbors_dict, node_arw_label_dict, edge_dict = \
-            sub_graph_neighbor_sample(graph=self.g, anchor_node_ids=anchor_node_ids,
-                                      cls_node_ids=cls_node_ids, fanouts=samp_fanouts,
-                                      edge_dir=self.edge_dir, debug=False)
-        subgraph, parent2sub_dict = cls_sub_graph_extractor(graph=self.g, edge_dict=edge_dict,
-                                                            neighbors_dict=neighbors_dict,
-                                                            special_relation_dict=self.special_relation2id,
-                                                            node_arw_label_dict=node_arw_label_dict,
-                                                            self_loop=self.self_loop,
-                                                            cls_addition=self.cls_node,
-                                                            bi_directed=self.bi_directed, debug=False)
-        # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        # subgraph = cls_anchor_sub_graph_augmentation(subgraph=subgraph, parent2sub_dict=parent2sub_dict,
-        #                                              neighbors_dict=neighbors_dict,
-        #                                              special_relation_dict=self.special_relation2id,
-        #                                              edge_dir=self.edge_dir, bi_directed=self.bi_directed)
+        subgraph, parent2sub_dict, _ = \
+            anchor_node_sub_graph_extractor(graph=self.g,
+                                            anchor_node_ids=anchor_node_ids,
+                                            cls_node_ids=cls_node_ids,
+                                            fanouts=samp_fanouts,
+                                            edge_dir=self.edge_dir,
+                                            special_relation2id=self.special_relation2id,
+                                            self_loop=self.self_loop,
+                                            bi_directed=self.bi_directed,
+                                            samp_type=self.samp_type,
+                                            cls_addition=self.cls_node,
+                                            debug=False)
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         sub_anchor_id = parent2sub_dict[node_idx.data.item()]
         class_label = self.g.ndata['label'][node_idx]

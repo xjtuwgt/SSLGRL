@@ -6,6 +6,8 @@ from dgl.sampling import sample_neighbors
 from dgl.sampling.randomwalks import random_walk
 from torch import Tensor
 from time import time
+from dgl import DGLHeteroGraph
+import math
 import copy
 
 
@@ -33,7 +35,6 @@ def construct_special_graph_dictionary(graph, hop_num: int, n_relations: int, n_
     n_relations = n_relations + 1
     special_relation_dict['loop_r'] = n_relations  # self-loop relation
     n_relations = n_relations + 1
-    special_relation_dict['mask_r'] = n_relations  # for edge mask
     number_of_nodes = graph.number_of_nodes()
     number_of_relations = n_relations
     return graph, number_of_nodes, number_of_relations, special_entity_dict, special_relation_dict
@@ -51,8 +52,8 @@ def add_relation_ids_to_graph(graph, edge_type_ids: Tensor):
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def sub_graph_neighbor_sample(graph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list, edge_dir: str = 'in',
-                              debug=False):
+def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
+                              edge_dir: str = 'in', debug=False):
     """
     :param graph: dgl graph
     :param anchor_node_ids: LongTensor
@@ -88,7 +89,6 @@ def sub_graph_neighbor_sample(graph, anchor_node_ids: Tensor, cls_node_ids: Tens
     neighbors_dict = dict([(k, torch.unique(v, return_counts=True)) for k, v in neighbors_dict.items()])
     # #############################################################################################
     node_arw_label_dict = {anchor_node_ids[0].data.item(): 1, cls_node_ids[0].data.item(): 0}
-    # key == parent node id, value = length/hop based label
     # ###########################################anonymous rand walk node labels###################
     for hop in range(1, hop_number + 1):
         hop_neighbors = neighbors_dict['{}_hop_{}'.format(edge_dir, hop)]
@@ -100,10 +100,11 @@ def sub_graph_neighbor_sample(graph, anchor_node_ids: Tensor, cls_node_ids: Tens
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def sub_graph_random_walk_sample(graph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
-                                 edge_dir: str = 'in', debug=False):
+def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
+                         restart_prob: float = 0.8, edge_dir: str = 'in', debug=False):
     """
-    :param graph:
+    :param restart_prob:
+    :param graph: graph have edge type: rid
     :param anchor_node_ids:
     :param cls_node_ids:
     :param fanouts:
@@ -118,45 +119,53 @@ def sub_graph_random_walk_sample(graph, anchor_node_ids: Tensor, cls_node_ids: T
     else:
         raw_graph = graph
     # ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    walk_length = len(fanouts) + 1
-    num_traces = torch.prod(torch.tensor(fanouts, dtype=torch.long)).data.item()
+    walk_length = len(fanouts)
+    num_traces = max(64,
+                     int((graph.out_degrees(anchor_node_ids.data.item()) * math.e
+                          / (math.e - 1) / restart_prob) + 0.5),
+                     torch.prod(torch.tensor(fanouts, dtype=torch.long)).data.item())
+    num_traces = num_traces * 5
     assert num_traces > 1
     neighbors_dict = {'anchor': (anchor_node_ids, torch.tensor([1], dtype=torch.long)),
                       'cls': (cls_node_ids, torch.tensor([1], dtype=torch.long))}
+    node_pos_label_dict = {anchor_node_ids[0].data.item(): 1, cls_node_ids[0].data.item(): 0}
     edge_dict = {}  # sampled edge dictionary: (head, t_id, tail)
-    # ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     anchor_node_ids = anchor_node_ids.repeat(num_traces)
-    traces, types = random_walk(g=raw_graph, nodes=anchor_node_ids, length=walk_length)
-    for hop in range(1, walk_length):
-        neighbors_dict['{}_hop_{}'.format(edge_dir, hop)] = torch.unique(traces[:, hop], return_counts=True)
+    traces, _ = random_walk(g=raw_graph, nodes=anchor_node_ids, length=walk_length, restart_prob=restart_prob)
+    valid_trace_idx = (traces >= 0).sum(dim=1) > 1
+    traces = traces[valid_trace_idx]
+    for hop in range(1, walk_length + 1):
+        trace_i = traces[:, hop]
+        trace_i = trace_i[trace_i >= 0]
+        if trace_i.shape[0] > 0:
+            hop_neighbors = torch.unique(trace_i, return_counts=True)
+            neighbors_dict['{}_hop_{}'.format(edge_dir, hop)] = hop_neighbors
+            for neighbor in hop_neighbors[0].tolist():
+                if neighbor not in node_pos_label_dict:
+                    node_pos_label_dict[neighbor] = hop + 1
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     src_nodes, dst_nodes = traces[:, :-1].flatten(), traces[:, 1:].flatten()
-    number_of_nodes = graph.number_of_nodes()
-    edge_ids = src_nodes * number_of_nodes + dst_nodes
-    edge_ids[dst_nodes == -1] = -1
-    unique_edge_id = torch.unique(edge_ids[edge_ids >= 0])
-    src_nodes, dst_nodes = unique_edge_id // number_of_nodes, unique_edge_id % number_of_nodes
-    src_node_list, dst_node_list = src_nodes.tolist(), dst_nodes.tolist()
-    edge_ids = raw_graph.edge_ids(src_nodes, dst_nodes)
-    edge_tids = raw_graph.edata['rid'][edge_ids]
+    valid_edge_idx = dst_nodes >= 0
+    src_nodes, dst_nodes = src_nodes[valid_edge_idx], dst_nodes[valid_edge_idx]
+    if edge_dir == 'in':
+        edge_ids = graph.edge_ids(dst_nodes, src_nodes)
+    else:
+        edge_ids = graph.edge_ids(src_nodes, dst_nodes)
+    edge_tids = graph.edata['rid'][edge_ids]
     eid_list, tid_list = edge_ids.tolist(), edge_tids.tolist()
+    src_node_list, dst_node_list = src_nodes.tolist(), dst_nodes.tolist()
     for _, eid in enumerate(eid_list):
         edge_dict[eid] = (src_node_list[_], tid_list[_], dst_node_list[_])
     ##############################################################################################
-    node_arw_label_dict = {anchor_node_ids[0].data.item(): 1, cls_node_ids[0].data.item(): 0}
-    for hop in range(1, walk_length):
-        hop_neighbors = neighbors_dict['{}_hop_{}'.format(edge_dir, hop)]
-        for neighbor in hop_neighbors[0].tolist():
-            if neighbor not in node_arw_label_dict:
-                node_arw_label_dict[neighbor] = hop + 1
-    ##############################################################################################
     end_time = time() if debug else 0
     if debug:
-        print('Sampling time = {:.4f} seconds'.format(end_time - start_time))
-    return neighbors_dict, node_arw_label_dict, edge_dict
+        print('RWR Sampling time = {:.4f} seconds'.format(end_time - start_time))
+    return neighbors_dict, node_pos_label_dict, edge_dict
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def sub_graph_extractor(graph, edge_dict: dict, neighbors_dict: dict, bi_directed: bool = True):
+def sub_graph_construction(graph, edge_dict: dict, neighbors_dict: dict, bi_directed: bool = True):
     """
     :param graph: original graph
     :param edge_dict: edge dictionary: eid--> (src_node, edge_type, dst_node)
@@ -191,7 +200,7 @@ def single_node_graph_extractor(graph, neighbors_dict: dict):
     return sub_graph
 
 
-def add_self_loop_in_graph(graph, self_loop_r: int):
+def add_self_loop_to_graph(graph, self_loop_r: int):
     """
     :param graph:
     :param self_loop_r:
@@ -205,7 +214,7 @@ def add_self_loop_in_graph(graph, self_loop_r: int):
     return g
 
 
-def sub_graph_cls_addition(subgraph, cls_parent_node_id: int, special_relation_dict: dict):
+def cls_node_addition_to_graph(subgraph, cls_parent_node_id: int, special_relation_dict: dict):
     """
     add one cls node into sub-graph as super-node
     :param subgraph:
@@ -231,44 +240,51 @@ def sub_graph_cls_addition(subgraph, cls_parent_node_id: int, special_relation_d
     return subgraph, parent2sub_dict
 
 
-def cls_sub_graph_extractor(graph, edge_dict: dict, neighbors_dict: dict, special_relation_dict: dict,
-                            node_arw_label_dict: dict, bi_directed: bool = True, self_loop: bool = False,
-                            cls_addition: bool = False, debug=False):
-    """
-    extract the sub-graph according to edge_dict and then add cls_node as super node
-    :param cls_addition:
-    :param graph: original large graph
-    :param edge_dict: sampling edges
-    :param neighbors_dict: multi-hop information
-    :param special_relation_dict:
-    :param node_arw_label_dict
-    :param bi_directed:
-    :param self_loop
-    :param debug:
-    :return: adding cls node and bi-directional edges with 'cls_r'
-    """
-    start_time = time() if debug else 0
-    subgraph = sub_graph_extractor(graph=graph, edge_dict=edge_dict, bi_directed=bi_directed,
-                                   neighbors_dict=neighbors_dict)
+def anchor_node_sub_graph_extractor(graph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
+                                    special_relation2id: dict, samp_type: str = 'ns', restart_prob: float = 0.8,
+                                    edge_dir: str = 'in', self_loop: bool = False, bi_directed: bool = False,
+                                    cls_addition: bool = True, debug=False):
+    if samp_type == 'ns':
+        neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_neighbor_sample(graph=graph,
+                                                                                   anchor_node_ids=anchor_node_ids,
+                                                                                   cls_node_ids=cls_node_ids,
+                                                                                   fanouts=fanouts, edge_dir=edge_dir,
+                                                                                   debug=debug)
+    elif samp_type == 'rwr':
+        neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_rwr_sample(graph=graph,
+                                                                              anchor_node_ids=anchor_node_ids,
+                                                                              cls_node_ids=cls_node_ids,
+                                                                              fanouts=fanouts,
+                                                                              restart_prob=restart_prob,
+                                                                              edge_dir=edge_dir,
+                                                                              debug=debug)
+    else:
+        raise 'Sampling method {} is not supported!'.format(samp_type)
+    subgraph = sub_graph_construction(graph=graph, edge_dict=edge_dict, bi_directed=bi_directed,
+                                      neighbors_dict=neighbors_dict)
+
     if cls_addition:
         cls_parent_node_id = neighbors_dict['cls'][0][0].data.item()
-        subgraph, parent2sub_dict = sub_graph_cls_addition(subgraph=subgraph, cls_parent_node_id=cls_parent_node_id,
-                                                           special_relation_dict=special_relation_dict)
-        assert len(parent2sub_dict) == len(node_arw_label_dict)
+        subgraph, parent2sub_dict = cls_node_addition_to_graph(subgraph=subgraph,
+                                                               special_relation_dict=special_relation2id,
+                                                               cls_parent_node_id=cls_parent_node_id)
     else:
         parent_node_ids, sub_node_ids = subgraph.ndata['nid'].tolist(), subgraph.nodes().tolist()
         parent2sub_dict = dict(zip(parent_node_ids, sub_node_ids))
-    assert len(parent2sub_dict) == subgraph.number_of_nodes()
-    node_orders = torch.zeros(len(parent2sub_dict), dtype=torch.long)
-    for key, value in parent2sub_dict.items():
-        node_orders[value] = node_arw_label_dict[key]
-    subgraph.ndata['n_rw_label'] = node_orders
-    end_time = time() if debug else 0
+
     if self_loop:
-        subgraph = add_self_loop_in_graph(graph=subgraph, self_loop_r=special_relation_dict['loop_r'])
-    if debug:
-        print('CLS sub-graph construction time = {:.4f} seconds'.format(end_time - start_time))
-    return subgraph, parent2sub_dict
+        subgraph = add_self_loop_to_graph(graph=subgraph, self_loop_r=special_relation2id['loop_r'])
+    assert len(parent2sub_dict) == subgraph.number_of_nodes()
+    node_orders = torch.zeros(len(parent2sub_dict), dtype=torch.long).to(graph.device)
+    for key, value in parent2sub_dict.items():
+        node_orders[value] = node_pos_label_dict[key]
+    subgraph.ndata['n_rw_pos'] = node_orders
+    return subgraph, parent2sub_dict, neighbors_dict
+
+
+"""
+Graph augmentation method
+"""
 
 
 def cls_anchor_sub_graph_augmentation(subgraph, parent2sub_dict: dict, neighbors_dict: dict,
@@ -348,6 +364,6 @@ def sub_graph_multiview_augmentation(subgraph, hop_num: int, edge_dir: str, spec
 
         aug_sub_graph.add_edges(src_nodes, dst_nodes, {'rid': relation_tid_i})
     cls_parent_node_id = special_entity_dict['cls']
-    aug_sub_graph, _ = sub_graph_cls_addition(subgraph=aug_sub_graph, cls_parent_node_id=cls_parent_node_id,
-                                              special_relation_dict=special_relation_dict)
+    aug_sub_graph, _ = cls_node_addition_to_graph(subgraph=aug_sub_graph, cls_parent_node_id=cls_parent_node_id,
+                                                  special_relation_dict=special_relation_dict)
     return aug_sub_graph

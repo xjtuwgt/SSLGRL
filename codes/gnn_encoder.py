@@ -96,7 +96,7 @@ class GDTEncoder(nn.Module):
         ent_features = self.node_embed_layer(ent_ids)
         rel_features = self.relation_embed_layer(rel_ids)
         if self.config.arw_position:
-            arw_positions = batch_g.ndata['n_rw_label']
+            arw_positions = batch_g.ndata['n_rw_pos']
             arw_pos_embed = self.arw_position_embed_layer(arw_positions)
             ent_features = ent_features + arw_pos_embed
         with batch_g.local_scope():
@@ -120,7 +120,7 @@ class GDTEncoder(nn.Module):
         ent_ids = batch_g.ndata['nid']
         ent_features = self.node_embed_layer(ent_ids)
         if self.config.arw_position:
-            arw_positions = batch_g.ndata['n_rw_label']
+            arw_positions = batch_g.ndata['n_rw_pos']
             arw_pos_embed = self.arw_position_embed_layer(arw_positions)
             ent_features = ent_features + arw_pos_embed
         with batch_g.local_scope():
