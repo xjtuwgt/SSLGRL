@@ -1,4 +1,6 @@
 from core.gnn_layers import GDTLayer, RGDTLayer
+from core.gnnv2_layers import GDTLayer as GDTv2Layer
+from core.gnnv2_layers import RGDTLayer as RGDTv2Layer
 from torch import Tensor
 from core.siamese_network import SimSiam
 from core.layers import EmbeddingLayer
@@ -12,6 +14,10 @@ class GDTEncoder(nn.Module):
     def __init__(self, config):
         super(GDTEncoder, self).__init__()
         self.config = config
+        if self.config.gnn_v2:
+            GNNLayer, RGNNLayer = GDTv2Layer, RGDTv2Layer
+        else:
+            GNNLayer, RGNNLayer = GDTLayer, RGDTLayer
         self.node_embed_layer = EmbeddingLayer(num=self.config.node_number, dim=self.config.node_emb_dim)
         if self.config.relation_encoder:
             self.relation_embed_layer = EmbeddingLayer(num=self.config.relation_number,
@@ -24,7 +30,7 @@ class GDTEncoder(nn.Module):
                                                            dim=self.config.node_emb_dim)
         self.graph_encoder = nn.ModuleList()
         if self.config.relation_encoder:
-            self.graph_encoder.append(module=RGDTLayer(in_ent_feats=self.config.node_emb_dim,
+            self.graph_encoder.append(module=RGNNLayer(in_ent_feats=self.config.node_emb_dim,
                                                        in_rel_feats=self.config.relation_emb_dim,
                                                        out_ent_feats=self.config.hidden_dim,
                                                        num_heads=self.config.head_num,
@@ -36,7 +42,7 @@ class GDTEncoder(nn.Module):
                                                        diff_head_tail=self.config.diff_head_tail,
                                                        ppr_diff=self.config.ppr_diff))
         else:
-            self.graph_encoder.append(module=GDTLayer(in_ent_feats=self.config.node_emb_dim,
+            self.graph_encoder.append(module=GNNLayer(in_ent_feats=self.config.node_emb_dim,
                                                       out_ent_feats=self.config.hidden_dim,
                                                       num_heads=self.config.head_num,
                                                       hop_num=self.config.gnn_hop_num,
@@ -47,7 +53,7 @@ class GDTEncoder(nn.Module):
                                                       diff_head_tail=self.config.diff_head_tail,
                                                       ppr_diff=self.config.ppr_diff))
         for _ in range(1, self.config.layers):
-            self.graph_encoder.append(module=GDTLayer(in_ent_feats=self.config.hidden_dim,
+            self.graph_encoder.append(module=GNNLayer(in_ent_feats=self.config.hidden_dim,
                                                       out_ent_feats=self.config.hidden_dim,
                                                       num_heads=self.config.head_num,
                                                       hop_num=self.config.gnn_hop_num,
