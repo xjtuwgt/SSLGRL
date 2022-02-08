@@ -246,7 +246,7 @@ def cls_node_addition_to_graph(subgraph, cls_parent_node_id: int, special_relati
 def anchor_node_sub_graph_extractor(graph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
                                     special_relation2id: dict, samp_type: str = 'ns', restart_prob: float = 0.8,
                                     edge_dir: str = 'in', self_loop: bool = True, bi_directed: bool = True,
-                                    cls_addition: bool = True, ns_unique_neighbor = False, debug=False):
+                                    cls_addition: bool = True, ns_unique_neighbor: bool = False, debug=False):
     if samp_type == 'ns':
         neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_neighbor_sample(graph=graph,
                                                                                    anchor_node_ids=anchor_node_ids,
