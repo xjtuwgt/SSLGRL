@@ -23,14 +23,4 @@ args = parser.parse_args(argv)
 # #######################################################################
 args = complete_default_parser(args)
 #########################################################################
-logging.info('*' * 75)
-for key, value in vars(args).items():
-    logger.info('Hype-parameter\t{} = {}'.format(key, value))
-logging.info('*' * 75)
-#########################################################################
-for key, value in vars(args).items():
-    if 'number' in key or 'emb_dim' in key:
-        logger.info('Hype-parameter\t{} = {}'.format(key, value))
-logging.info('*' * 75)
-#########################################################################
 train_node_classification(args=args)

@@ -1,7 +1,3 @@
-# from graph_data.ogb_graph_data import ogb_node_pred_subgraph_data_helper
-# from graph_data.citation_graph_data import citation_node_pred_subgraph_data_helper
-# from graph_data.citation_graph_data import citation_subgraph_pretrain_dataloader
-# from graph_data.ogb_graph_data import ogb_subgraph_pretrain_dataloader
 from graph_data.graph_dataloader import NodeClassificationSubGraphDataHelper
 import logging
 from tqdm import tqdm, trange
@@ -18,7 +14,12 @@ def train_node_classification(args):
     args.relation_number = node_data_helper.number_of_relations
     args.num_node_classes = node_data_helper.num_class
     node_features = node_data_helper.node_features
-
+    #########################################################################
+    for key, value in vars(args).items():
+        if 'number' in key or 'emb_dim' in key:
+            logging.info('Hype-parameter\t{} = {}'.format(key, value))
+    logging.info('*' * 75)
+    #########################################################################
     train_dataloader = node_data_helper.data_loader(data_type='train')
     logging.info('Loading training data = {} completed'.format(len(train_dataloader)))
     logging.info('*' * 75)
