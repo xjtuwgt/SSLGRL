@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from graph_data.citation_graph_data import citation_k_hop_graph_reconstruction, citation_train_valid_test
 from graph_data.ogb_graph_data import ogb_k_hop_graph_reconstruction, ogb_train_valid_test
-from utils.graph_utils import sub_graph_neighbor_sample, anchor_node_sub_graph_extractor
+from utils.graph_utils import anchor_node_sub_graph_extractor
 
 
 class NodePredSubGraphDataset(Dataset):
@@ -48,9 +48,9 @@ class NodePredSubGraphDataset(Dataset):
         node_idx = self.data_node_ids[idx]
         anchor_node_ids = torch.LongTensor([node_idx])
         if self.training:
-            # samp_hop_num = random.randint(2, self.hop_num+1)
-            # samp_fanouts = self.fanouts[:samp_hop_num]
-            samp_fanouts = self.fanouts
+            samp_hop_num = random.randint(2, self.hop_num+1)
+            samp_fanouts = self.fanouts[:samp_hop_num]
+            # samp_fanouts = self.fanouts
         else:
             samp_fanouts = self.fanouts
         cls_node_ids = torch.LongTensor([self.special_entity2id['cls']])
@@ -65,7 +65,7 @@ class NodePredSubGraphDataset(Dataset):
                                             bi_directed=self.bi_directed,
                                             samp_type=self.samp_type,
                                             cls_addition=self.cls_node,
-                                            ns_unique_neighbor=True,
+                                            ns_unique_neighbor=False,
                                             debug=False)
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         sub_anchor_id = parent2sub_dict[node_idx.data.item()]
