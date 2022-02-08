@@ -33,11 +33,11 @@ def citation_hyper_parameter_space():
     learning_rate = {'name': 'learning_rate', 'type': 'choice',
                      'values': [1e-5, 2e-5, 5e-5]}  # 5e-5, 1e-4, 2e-4, 3e-4, 1e-3, 2e-3, 5e-3
     weight_decay = {'name': 'weight_decay', 'type': 'choice', 'values': [1e-8, 5e-8]}
-    attn_drop_ratio = {'name': 'attn_drop_ratio', 'type': 'choice', 'values': list(np.arange(0.1, 0.56, 0.025))}
-    feat_drop_ratio = {'name': 'feat_drop_ratio', 'type': 'choice', 'values': list(np.arange(0.1, 0.56, 0.025))}
-    edge_drop_ratio = {'name': 'edge_drop_ratio', 'type': 'choice', 'values': list(np.arange(0.05, 0.26, 0.025))}
+    attn_drop_ratio = {'name': 'attn_drop_ratio', 'type': 'choice', 'values': [0.2, 0.25, 0.3, 0.35]}
+    feat_drop_ratio = {'name': 'feat_drop_ratio', 'type': 'choice', 'values': [0.2, 0.25, 0.3, 0.35]}
+    edge_drop_ratio = {'name': 'edge_drop_ratio', 'type': 'choice', 'values': [0.1, 0.15, 0.2]}
     hop_num = {'name': 'hop_num', 'type': 'choice', 'values': [6, 8]}
-    alpha = {'name': 'alpha', 'type': 'choice', 'values': list(np.arange(0.05, 0.21, 0.025))}
+    alpha = {'name': 'alpha', 'type': 'choice', 'values': [0.05, 0.1, 0.15]}
     hidden_dim = {'name': 'hidden_dim', 'type': 'choice', 'values': [512]}
     layer_num = {'name': 'layer_num', 'type': 'choice', 'values': [6]}
     epoch = {'name': 'epoch', 'type': 'choice', 'values': [300]}
