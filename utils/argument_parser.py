@@ -88,7 +88,7 @@ def default_parser():
     parser.add_argument('--ogb_node_name', type=str, default='ogbn-arxiv')
     parser.add_argument('--graph_type', type=str, default='citation', choices=["citation", "ogb", "kg"])
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    parser.add_argument('--sub_graph_fanouts', type=str, default='10,5,5')
+    parser.add_argument('--sub_graph_fanouts', type=str, default='10,5,5,5')
     parser.add_argument('--sub_graph_hop_num', type=int, default=8)
     parser.add_argument('--sub_graph_edge_dir', type=str, default='in', choices=['in', 'out'])
     parser.add_argument('--sub_graph_self_loop', type=boolean_string, default='true')
@@ -118,8 +118,8 @@ def default_parser():
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--gnn_hop_num', type=int, default=6)
     parser.add_argument('--alpha', type=float, default=0.1)
-    parser.add_argument('--hidden_dim', type=int, default=512)
-    parser.add_argument('--head_num', type=int, default=8)
+    parser.add_argument('--hidden_dim', type=int, default=256)
+    parser.add_argument('--head_num', type=int, default=4)
     parser.add_argument('--layers', type=int, default=6)
     parser.add_argument('--negative_slope', type=float, default=0.2)
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
