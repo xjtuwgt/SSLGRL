@@ -24,5 +24,5 @@ args = parser.parse_args(argv)
 # #######################################################################
 args = complete_default_parser(args)
 #########################################################################
-# train_node_classification(args=args)
-hyper_parameter_tuning_rand_search(args=args)
+train_node_classification(args=args)
+# hyper_parameter_tuning_rand_search(args=args)
