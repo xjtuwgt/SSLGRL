@@ -2,7 +2,7 @@ import logging
 import torch
 import sys
 from utils.argument_parser import default_parser, json_to_argv, complete_default_parser
-from utils.experiment_utils import train_node_classification
+from utils.experiment_utils import train_node_classification, hyper_parameter_tuning_rand_search
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
                     level=logging.INFO)
@@ -19,8 +19,10 @@ if args_config_provided.config_file is not None:
     argv = json_to_argv(args_config_provided.config_file) + sys.argv[1:]
 else:
     argv = sys.argv[1:]
+# #######################################################################
 args = parser.parse_args(argv)
 # #######################################################################
 args = complete_default_parser(args)
 #########################################################################
-train_node_classification(args=args)
+# train_node_classification(args=args)
+hyper_parameter_tuning_rand_search(args=args)
