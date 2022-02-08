@@ -11,8 +11,9 @@ import math
 import copy
 
 
-def construct_special_graph_dictionary(graph, hop_num: int, n_relations: int, n_entities: int):
+def construct_special_graph_dictionary(graph: DGLHeteroGraph, hop_num: int, n_relations: int, n_entities: int):
     """
+    Add multi-hop relation and super cls node to graph
     :param graph:
     :param hop_num: number of hops to generate special relations
     :param n_relations: number of relations in graph
@@ -40,9 +41,9 @@ def construct_special_graph_dictionary(graph, hop_num: int, n_relations: int, n_
     return graph, number_of_nodes, number_of_relations, special_entity_dict, special_relation_dict
 
 
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def add_relation_ids_to_graph(graph, edge_type_ids: Tensor):
     """
+    Add relation ids on edges
     :param graph:
     :param edge_type_ids: add 'rid' to graph edge data --> type id
     :return:
@@ -51,9 +52,8 @@ def add_relation_ids_to_graph(graph, edge_type_ids: Tensor):
     return graph
 
 
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
-                              edge_dir: str = 'in', debug=False):
+def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor,
+                              fanouts: list, edge_dir: str = 'in', debug=False):
     """
     :param graph: dgl graph
     :param anchor_node_ids: LongTensor
@@ -100,8 +100,8 @@ def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cl
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
-                         restart_prob: float = 0.8, edge_dir: str = 'in', debug=False):
+def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor,
+                         fanouts: list, restart_prob: float = 0.8, edge_dir: str = 'in', debug=False):
     """
     :param restart_prob:
     :param graph: graph have edge type: rid
@@ -164,9 +164,9 @@ def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_nod
     return neighbors_dict, node_pos_label_dict, edge_dict
 
 
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def sub_graph_construction(graph, edge_dict: dict, neighbors_dict: dict, bi_directed: bool = True):
     """
+    Construct
     :param graph: original graph
     :param edge_dict: edge dictionary: eid--> (src_node, edge_type, dst_node)
     :param neighbors_dict: {cls, anchor, hop} -> ((neighbors, neighbor counts))
@@ -242,13 +242,14 @@ def cls_node_addition_to_graph(subgraph, cls_parent_node_id: int, special_relati
 
 def anchor_node_sub_graph_extractor(graph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
                                     special_relation2id: dict, samp_type: str = 'ns', restart_prob: float = 0.8,
-                                    edge_dir: str = 'in', self_loop: bool = False, bi_directed: bool = False,
+                                    edge_dir: str = 'in', self_loop: bool = True, bi_directed: bool = True,
                                     cls_addition: bool = True, debug=False):
     if samp_type == 'ns':
         neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_neighbor_sample(graph=graph,
                                                                                    anchor_node_ids=anchor_node_ids,
                                                                                    cls_node_ids=cls_node_ids,
-                                                                                   fanouts=fanouts, edge_dir=edge_dir,
+                                                                                   fanouts=fanouts,
+                                                                                   edge_dir=edge_dir,
                                                                                    debug=debug)
     elif samp_type == 'rwr':
         neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_rwr_sample(graph=graph,
