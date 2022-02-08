@@ -53,8 +53,10 @@ def add_relation_ids_to_graph(graph, edge_type_ids: Tensor):
 
 
 def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor,
-                              fanouts: list, edge_dir: str = 'in', debug=False):
+                              fanouts: list, edge_dir: str = 'in', unique_neighbor: bool = False,
+                              debug=False):
     """
+    :param unique_neighbor:
     :param graph: dgl graph
     :param anchor_node_ids: LongTensor
     :param cls_node_ids: LongTensor
@@ -81,6 +83,8 @@ def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cl
         for _, eid in enumerate(sg_eid_list):
             edge_dict[eid] = (sg_src_list[_], sg_tid_list[_], sg_dst_list[_])
         hop_neighbor = sg_src if edge_dir == 'in' else sg_dst
+        if unique_neighbor:
+            hop_neighbor = torch.unique(hop_neighbor)
         neighbors_dict['{}_hop_{}'.format(edge_dir, hop)] = hop_neighbor
         hop = hop + 1
     end_time = time() if debug else 0
@@ -99,7 +103,6 @@ def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cl
     return neighbors_dict, node_arw_label_dict, edge_dict
 
 
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor,
                          fanouts: list, restart_prob: float = 0.8, edge_dir: str = 'in', debug=False):
     """
@@ -243,13 +246,14 @@ def cls_node_addition_to_graph(subgraph, cls_parent_node_id: int, special_relati
 def anchor_node_sub_graph_extractor(graph, anchor_node_ids: Tensor, cls_node_ids: Tensor, fanouts: list,
                                     special_relation2id: dict, samp_type: str = 'ns', restart_prob: float = 0.8,
                                     edge_dir: str = 'in', self_loop: bool = True, bi_directed: bool = True,
-                                    cls_addition: bool = True, debug=False):
+                                    cls_addition: bool = True, ns_unique_neighbor = False, debug=False):
     if samp_type == 'ns':
         neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_neighbor_sample(graph=graph,
                                                                                    anchor_node_ids=anchor_node_ids,
                                                                                    cls_node_ids=cls_node_ids,
                                                                                    fanouts=fanouts,
                                                                                    edge_dir=edge_dir,
+                                                                                   unique_neighbor=ns_unique_neighbor,
                                                                                    debug=debug)
     elif samp_type == 'rwr':
         neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_rwr_sample(graph=graph,

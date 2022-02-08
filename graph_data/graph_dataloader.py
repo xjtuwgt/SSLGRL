@@ -64,6 +64,7 @@ class NodePredSubGraphDataset(Dataset):
                                             bi_directed=self.bi_directed,
                                             samp_type=self.samp_type,
                                             cls_addition=self.cls_node,
+                                            ns_unique_neighbor=True,
                                             debug=False)
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         sub_anchor_id = parent2sub_dict[node_idx.data.item()]
