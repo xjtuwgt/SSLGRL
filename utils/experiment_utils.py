@@ -15,6 +15,10 @@ def train_node_classification(args):
     args.num_node_classes = node_data_helper.num_class
     node_features = node_data_helper.node_features
     #########################################################################
+    logging.info('*' * 75)
+    for key, value in vars(args).items():
+        logging.info('Hype-parameter\t{} = {}'.format(key, value))
+    logging.info('*' * 75)
     for key, value in vars(args).items():
         if 'number' in key or 'emb_dim' in key:
             logging.info('Hype-parameter\t{} = {}'.format(key, value))
