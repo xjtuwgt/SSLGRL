@@ -109,8 +109,8 @@ def default_parser():
     parser.add_argument('--siam_dim', type=int, default=2048)
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--gnn_v2', type=boolean_string, default='false')
-    parser.add_argument('--feat_drop', type=float, default=0.45)
-    parser.add_argument('--attn_drop', type=float, default=0.35)
+    parser.add_argument('--feat_drop', type=float, default=0.25)
+    parser.add_argument('--attn_drop', type=float, default=0.25)
     parser.add_argument('--residual', type=boolean_string, default='true')
     parser.add_argument('--diff_head_tail', type=boolean_string, default='true')
     parser.add_argument('--ppr_diff', type=boolean_string, default='true')
