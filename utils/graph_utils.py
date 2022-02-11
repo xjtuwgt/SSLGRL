@@ -180,7 +180,7 @@ def sub_graph_construction(graph, edge_dict: dict, neighbors_dict: dict, bi_dire
         assert 'anchor' in neighbors_dict
         return single_node_graph_extractor(graph=graph, neighbors_dict=neighbors_dict)
     edge_ids = list(edge_dict.keys())
-    if bi_directed:
+    if bi_directed:  # the graph is bi-directed
         parent_triples = np.array(list(edge_dict.values()))
         rev_edge_ids = graph.edge_ids(parent_triples[:, 2], parent_triples[:, 0]).tolist()
         rev_edge_ids = [_ for _ in rev_edge_ids if _ not in edge_dict]  # adding new edges as graph is bi_directed
