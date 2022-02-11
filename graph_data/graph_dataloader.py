@@ -130,6 +130,7 @@ class NodeClassificationSubGraphDataHelper(object):
         self.self_loop = self.config.sub_graph_self_loop  # whether adding self-loop in sub-graph
         # self.fanouts = [int(_) for _ in self.config.sub_graph_fanouts.split(',')]
         self.fanouts = [-1 for _ in self.config.sub_graph_fanouts.split(',')]
+        assert len(self.fanouts) >= 1
 
     def data_loader(self, data_type):
         assert data_type in {'train', 'valid', 'test'}
