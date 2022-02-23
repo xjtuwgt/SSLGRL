@@ -13,7 +13,7 @@ import copy
 
 def construct_special_graph_dictionary(graph: DGLHeteroGraph, hop_num: int, n_relations: int, n_entities: int):
     """
-    Add multi-hop relation and super cls node to graph
+    Add cls node to graph (last node), and extend multi-hop relation and cls relation and self-loop relation
     :param graph:
     :param hop_num: number of hops to generate special relations
     :param n_relations: number of relations in graph
@@ -56,6 +56,7 @@ def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cl
                               fanouts: list, edge_dir: str = 'in', unique_neighbor: bool = False,
                               debug=False):
     """
+    Neighbor-hood based sub-graph sampling
     :param unique_neighbor:
     :param graph: dgl graph
     :param anchor_node_ids: LongTensor
@@ -106,6 +107,7 @@ def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cl
 def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor,
                          fanouts: list, restart_prob: float = 0.8, edge_dir: str = 'in', debug=False):
     """
+    Random walk with restrart based sub-graph sampling
     :param restart_prob:
     :param graph: graph have edge type: rid
     :param anchor_node_ids:
@@ -126,7 +128,7 @@ def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_nod
     num_traces = max(64,
                      int((graph.out_degrees(anchor_node_ids.data.item()) * math.e
                           / (math.e - 1) / restart_prob) + 0.5),
-                     torch.prod(torch.tensor(fanouts, dtype=torch.long)).data.item())
+                     torch.prod(torch.tensor(fanouts, dtype=torch.long)).data.item())  #Number of sampled traces
     num_traces = num_traces * 5
     assert num_traces > 1
     neighbors_dict = {'anchor': (anchor_node_ids, torch.tensor([1], dtype=torch.long)),
@@ -169,7 +171,7 @@ def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_nod
 
 def sub_graph_construction(graph, edge_dict: dict, neighbors_dict: dict, bi_directed: bool = True):
     """
-    Construct
+    Construct sub-graph based on edge_dict (based on the sampled edges)
     :param graph: original graph
     :param edge_dict: edge dictionary: eid--> (src_node, edge_type, dst_node)
     :param neighbors_dict: {cls, anchor, hop} -> ((neighbors, neighbor counts))
@@ -194,6 +196,7 @@ def sub_graph_construction(graph, edge_dict: dict, neighbors_dict: dict, bi_dire
 
 def single_node_graph_extractor(graph, neighbors_dict: dict):
     """
+    One isolate node based sub-graph extraction
     :param graph:
     :param neighbors_dict: int --> (anchor_ids, anchor_counts)
     :return:
@@ -205,6 +208,7 @@ def single_node_graph_extractor(graph, neighbors_dict: dict):
 
 def add_self_loop_to_graph(graph, self_loop_r: int):
     """
+    Add self-loop relation to the graph
     :param graph:
     :param self_loop_r:
     :return:
@@ -219,7 +223,7 @@ def add_self_loop_to_graph(graph, self_loop_r: int):
 
 def cls_node_addition_to_graph(subgraph, cls_parent_node_id: int, special_relation_dict: dict):
     """
-    add one cls node into sub-graph as super-node
+    Add one cls node into sub-graph as super-node, and connect the cls node with other nodes with 'cls_r' relation type
     :param subgraph:
     :param cls_parent_node_id: cls node shared across all subgraphs
     :param special_relation_dict: {cls_r: cls_r index}
@@ -236,7 +240,7 @@ def cls_node_addition_to_graph(subgraph, cls_parent_node_id: int, special_relati
     cls_relation = torch.tensor(cls_relation, dtype=torch.long)
     cls_src_nodes = [cls_idx] * (subgraph.number_of_nodes() - 1)
     cls_src_nodes = torch.tensor(cls_src_nodes, dtype=torch.long)
-    cls_dst_nodes = torch.arange(0, subgraph.number_of_nodes() - 1)
+    cls_dst_nodes = torch.arange(0, subgraph.number_of_nodes() - 1)  # the last node is the cls node
     cls_src, cls_dst = torch.cat((cls_src_nodes, cls_dst_nodes)), np.concatenate((cls_dst_nodes, cls_src_nodes))
     # bi-directional cls_nodes
     subgraph.add_edges(cls_src, cls_dst, {'rid': cls_relation})
@@ -247,6 +251,23 @@ def anchor_node_sub_graph_extractor(graph, anchor_node_ids: Tensor, cls_node_ids
                                     special_relation2id: dict, samp_type: str = 'ns', restart_prob: float = 0.8,
                                     edge_dir: str = 'in', self_loop: bool = True, bi_directed: bool = True,
                                     cls_addition: bool = True, ns_unique_neighbor: bool = False, debug=False):
+    """
+    Extract Sub-graph from graph based o given anchor point
+    :param graph:
+    :param anchor_node_ids:
+    :param cls_node_ids:
+    :param fanouts:
+    :param special_relation2id:
+    :param samp_type:
+    :param restart_prob:
+    :param edge_dir:
+    :param self_loop:
+    :param bi_directed:
+    :param cls_addition:
+    :param ns_unique_neighbor:
+    :param debug:
+    :return:
+    """
     if samp_type == 'ns':
         neighbors_dict, node_pos_label_dict, edge_dict = sub_graph_neighbor_sample(graph=graph,
                                                                                    anchor_node_ids=anchor_node_ids,
