@@ -48,9 +48,9 @@ class NodePredSubGraphDataset(Dataset):
         node_idx = self.data_node_ids[idx]
         anchor_node_ids = torch.LongTensor([node_idx])
         if self.training:
-            samp_hop_num = random.randint(2, self.hop_num+1)
-            samp_fanouts = self.fanouts[:samp_hop_num]
-            # samp_fanouts = self.fanouts
+            # samp_hop_num = random.randint(2, self.hop_num+1)
+            # samp_fanouts = self.fanouts[:samp_hop_num]
+            samp_fanouts = self.fanouts
         else:
             samp_fanouts = self.fanouts
         cls_node_ids = torch.LongTensor([self.special_entity2id['cls']])
