@@ -21,7 +21,6 @@ class RGDTLayer(nn.Module):
                  attn_drop: float = 0.1,
                  edge_drop: float = 0.1,
                  negative_slope: float = 0.2,
-                 attn_degree_norm=True,
                  residual=True,
                  activation=None,
                  diff_head_tail=False,
@@ -33,7 +32,6 @@ class RGDTLayer(nn.Module):
         self._num_heads = num_heads
         self._hop_num = hop_num
         self._alpha = alpha
-        self._attn_degree_norm = attn_degree_norm
 
         assert self._out_ent_feats % self._num_heads == 0
         self._head_dim = self._out_ent_feats // self._num_heads
@@ -116,10 +114,6 @@ class RGDTLayer(nn.Module):
             feat_rel = feat_rel[graph.edata['rid']]
             e = self.attn_activation(graph.edata.pop('e') + feat_rel)  # (num_src_edge, num_heads, out_dim)
             e = (e * self.attn).sum(dim=-1).unsqueeze(dim=2)  # (num_edge, num_heads, 1)
-            if self._attn_degree_norm:
-                graph.edata.update({'e': e})
-                graph.apply_edges(fn.e_mul_v('e', 'log_in', 'e'))
-                e = graph.edata.pop('e')
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             if self.training and self.edge_drop > 0:
                 perm = torch.randperm(graph.number_of_edges(), device=e.device)
@@ -185,7 +179,6 @@ class GDTLayer(nn.Module):
                  attn_drop: float = 0.1,
                  edge_drop: float = 0.1,
                  negative_slope: float = 0.2,
-                 attn_degree_norm=True,
                  residual=True,
                  activation=None,
                  diff_head_tail=False,
@@ -196,7 +189,6 @@ class GDTLayer(nn.Module):
         self._num_heads = num_heads
         self._hop_num = hop_num
         self._alpha = alpha
-        self._attn_degree_norm = attn_degree_norm
 
         assert self._out_ent_feats % self._num_heads == 0
         self._head_dim = self._out_ent_feats // self._num_heads
@@ -275,10 +267,6 @@ class GDTLayer(nn.Module):
             graph.apply_edges(fn.u_add_v('ft', 'et', 'e'))
             e = self.attn_activation(graph.edata.pop('e'))  # (num_src_edge, num_heads, out_dim)
             e = (e * self.attn).sum(dim=-1).unsqueeze(dim=2)  # (num_edge, num_heads, 1)
-            if self._attn_degree_norm:
-                graph.edata.update({'e': e})
-                graph.apply_edges(fn.e_mul_v('e', 'log_in', 'e'))
-                e = graph.edata.pop('e')
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             if self.training and self.edge_drop > 0:
                 perm = torch.randperm(graph.number_of_edges(), device=e.device)
