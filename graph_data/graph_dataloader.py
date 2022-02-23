@@ -88,9 +88,6 @@ class NodePredSubGraphDataset(Dataset):
             else:
                 batch_anchor_id[idx] = _[2] + batch_graph_cls[idx - 1].data.item() + 1
         # +++++++++++++++++++++++++++++++++++++++
-        in_degrees = batch_graphs.in_degrees()
-        assert in_degrees.min() >= 1
-        batch_graphs.ndata['log_in'] = torch.log2(in_degrees.float())
         # 'cls' for graph level prediction and 'anchor' for node/edge level prediction
         return {'batch_graph': (batch_graphs, batch_graph_cls, batch_anchor_id), 'batch_label': batch_label}
 

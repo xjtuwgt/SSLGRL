@@ -28,6 +28,11 @@ class GDTEncoder(nn.Module):
             arw_position_num = self.config.sub_graph_hop_num + 2
             self.arw_position_embed_layer = EmbeddingLayer(num=arw_position_num,
                                                            dim=self.config.node_emb_dim)
+        if self.config.degree_embed:
+            max_degrees = self.config.node_number
+            self.degree_embed_layer = EmbeddingLayer(num=max_degrees,
+                                                     dim=self.config.node_emb_dim)
+
         self.graph_encoder = nn.ModuleList()
         if self.config.relation_encoder:
             self.graph_encoder.append(module=RGNNLayer(in_ent_feats=self.config.node_emb_dim,
@@ -65,7 +70,8 @@ class GDTEncoder(nn.Module):
                                                       ppr_diff=self.config.ppr_diff))
 
     def init(self, graph_node_emb: Tensor = None, graph_rel_emb: Tensor = None, pos_emb: Tensor = None,
-             node_freeze=False, rel_freeze=False, pos_freeze=False):
+             degree_emb: Tensor = None, node_freeze=False, rel_freeze=False,
+             pos_freeze=False, degree_freeze=False):
         if graph_node_emb is not None:
             self.node_embed_layer.init_with_tensor(data=graph_node_emb, freeze=node_freeze)
             logging.info('Initializing node features with pretrained embeddings')
@@ -82,6 +88,11 @@ class GDTEncoder(nn.Module):
                 self.arw_position_embed_layer.init_with_tensor(data=pos_emb, freeze=pos_freeze)
             else:
                 self.arw_position_embed_layer.init()
+        if self.config.degree_embed:
+            if degree_emb is not None:
+                self.degree_embed_layer.init_with_tensor(data=degree_emb, freeze=degree_freeze)
+            else:
+                self.degree_embed_layer.init()
 
     def forward(self, batch_g_pair, cls_or_anchor='cls'):
         if self.config.relation_encoder:
@@ -99,6 +110,11 @@ class GDTEncoder(nn.Module):
             arw_positions = batch_g.ndata['n_rw_pos']
             arw_pos_embed = self.arw_position_embed_layer(arw_positions)
             ent_features = ent_features + arw_pos_embed
+        if self.config.degree_embed:
+            in_degrees = batch_g.in_degrees()
+            assert in_degrees.min() >= 1
+            degree_embed = self.degree_embed_layer(in_degrees)
+            ent_features = ent_features + degree_embed
         with batch_g.local_scope():
             h = ent_features
             for _ in range(self.config.layers):
@@ -123,6 +139,12 @@ class GDTEncoder(nn.Module):
             arw_positions = batch_g.ndata['n_rw_pos']
             arw_pos_embed = self.arw_position_embed_layer(arw_positions)
             ent_features = ent_features + arw_pos_embed
+        if self.config.degree_embed:
+            in_degrees = batch_g.in_degrees()
+            assert in_degrees.min() >= 1
+            degree_embed = self.degree_embed_layer(in_degrees)
+            ent_features = ent_features + degree_embed
+
         with batch_g.local_scope():
             h = ent_features
             for _ in range(self.config.layers):

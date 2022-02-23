@@ -93,6 +93,7 @@ def default_parser():
     parser.add_argument('--sub_graph_edge_dir', type=str, default='in', choices=['in', 'out'])
     parser.add_argument('--sub_graph_self_loop', type=boolean_string, default='true')
     parser.add_argument('--arw_position', type=boolean_string, default='true')
+    parser.add_argument('--degree_embed', type=boolean_string, default='true')
     parser.add_argument('--cls_or_anchor', type=str, default='anchor', choices=["cls", "anchor"])
     parser.add_argument('--cls_addition', type=boolean_string, default='true')
     parser.add_argument('--oon_type', type=str, default='zero', choices=["zero", "one", "rand"])
@@ -106,6 +107,7 @@ def default_parser():
     parser.add_argument('--node_number', type=int, default=300)
     parser.add_argument('--node_emb_dim', type=int, default=300)
     parser.add_argument('--arw_pos_emb_dim', type=int, default=300)
+    parser.add_argument('--degree_emb_dim', type=int, default=300)
     parser.add_argument('--siam_dim', type=int, default=2048)
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     parser.add_argument('--gnn_v2', type=boolean_string, default='true')
