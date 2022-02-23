@@ -107,7 +107,7 @@ def sub_graph_neighbor_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cl
 def sub_graph_rwr_sample(graph: DGLHeteroGraph, anchor_node_ids: Tensor, cls_node_ids: Tensor,
                          fanouts: list, restart_prob: float = 0.8, edge_dir: str = 'in', debug=False):
     """
-    Random walk with restrart based sub-graph sampling
+    Random walk with re-strart based sub-graph sampling
     :param restart_prob:
     :param graph: graph have edge type: rid
     :param anchor_node_ids:
