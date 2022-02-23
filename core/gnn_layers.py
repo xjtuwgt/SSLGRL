@@ -125,10 +125,10 @@ class RGDTLayer(nn.Module):
             graph.dstdata.update({'et': et})
             graph.apply_edges(fn.u_add_v('eh', 'et', 'e'))
             e = self.attn_activation(graph.edata.pop('e') + er)
-            if self._attn_degree_norm:
-                graph.edata.update({'e': e})
-                graph.apply_edges(fn.e_mul_v('e', 'log_in', 'e'))
-                e = graph.edata.pop('e')
+            # if self._attn_degree_norm:
+            #     graph.edata.update({'e': e})
+            #     graph.apply_edges(fn.e_mul_v('e', 'log_in', 'e'))
+            #     e = graph.edata.pop('e')
 
             if self.training and self.edge_drop > 0:
                 perm = torch.randperm(graph.number_of_edges(), device=e.device)
@@ -288,10 +288,10 @@ class GDTLayer(nn.Module):
             graph.dstdata.update({'et': et})
             graph.apply_edges(fn.u_add_v('eh', 'et', 'e'))
             e = self.attn_activation(graph.edata.pop('e'))
-            if self._attn_degree_norm:
-                graph.edata.update({'e': e})
-                graph.apply_edges(fn.e_mul_v('e', 'log_in', 'e'))
-                e = graph.edata.pop('e')
+            # if self._attn_degree_norm:
+            #     graph.edata.update({'e': e})
+            #     graph.apply_edges(fn.e_mul_v('e', 'log_in', 'e'))
+            #     e = graph.edata.pop('e')
             if self.training and self.edge_drop > 0:
                 perm = torch.randperm(graph.number_of_edges(), device=e.device)
                 bound = int(graph.number_of_edges() * self.edge_drop)
