@@ -71,9 +71,9 @@ class NodePredSubGraphDataset(Dataset):
         sub_anchor_id = parent2sub_dict[node_idx.data.item()]
         class_label = self.g.ndata['label'][node_idx]
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        in_degrees = subgraph.in_degrees()
-        assert in_degrees.min() >= 1
-        subgraph.ndata['log_in'] = torch.log2(in_degrees.float())
+        # in_degrees = subgraph.in_degrees()
+        # assert in_degrees.min() >= 1
+        # subgraph.ndata['log_in'] = torch.log2(in_degrees.float())
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         return subgraph, class_label, sub_anchor_id
 
