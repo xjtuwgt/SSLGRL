@@ -3,10 +3,12 @@ from itertools import combinations
 from random import random
 import dgl
 import torch
+from dgl.sampling import sample_neighbors
 
 from utils.basic_utils import seed_everything
 
 seed_everything(seed=46)
+
 
 def ER(n, p):
     V = set([v for v in range(n)])
@@ -47,19 +49,32 @@ def ER(n, p):
 # A6 = torch.matmul(A5, A_n)
 # print(A6)
 
-src_nodes = [0, 0, 1, 2, 3, 3, 4]
-dst_nodes = [1, 2, 2, 3, 4, 5, 5]
-
-graph = dgl.graph((src_nodes + dst_nodes, dst_nodes +  src_nodes))
-print(graph)
-graph.edata['rid'] = torch.zeros(graph.number_of_edges())
-
+# src_nodes = [0, 0, 1, 2, 3, 3, 4]
+# dst_nodes = [1, 2, 2, 3, 4, 5, 5]
+#
+# graph = dgl.graph((src_nodes + dst_nodes, dst_nodes +  src_nodes))
+# print(graph)
+# graph.edata['rid'] = torch.zeros(graph.number_of_edges())
+#
 from utils.graph_utils import sub_graph_neighbor_sample
+
+#
+# neighbors_dict, node_arw_label_dict, edge_dict = \
+#     sub_graph_neighbor_sample(graph=graph, anchor_node_ids=torch.LongTensor([0]),
+#                           cls_node_ids=torch.LongTensor([7]), fanouts=[-1])
+#
+# print(neighbors_dict)
+# print(edge_dict)
+# print(node_arw_label_dict)
+
+src_nodes = [0, 0, 0, 1]
+dst_nodes = [1, 2, 3, 2]
+graph = dgl.graph((src_nodes + dst_nodes, dst_nodes + src_nodes))
+graph.edata['rid'] = torch.zeros(graph.number_of_edges(), dtype=torch.long)
 
 neighbors_dict, node_arw_label_dict, edge_dict = \
     sub_graph_neighbor_sample(graph=graph, anchor_node_ids=torch.LongTensor([0]),
-                          cls_node_ids=torch.LongTensor([7]), fanouts=[-1])
-
+                              cls_node_ids=torch.LongTensor([4]), fanouts=[-1, -1])
 print(neighbors_dict)
-print(edge_dict)
 print(node_arw_label_dict)
+print(edge_dict)

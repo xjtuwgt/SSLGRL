@@ -6,6 +6,10 @@ from codes.gnn_predictor import NodeClassificationModel
 import torch
 from utils.basic_utils import IGNORE_IDX, seed_everything
 from codes.gnn_encoder import GraphSimSiamEncoder
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+                    datefmt='%m/%d/%Y %H:%M:%S',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def rand_search_parameter(space: dict):
@@ -80,18 +84,18 @@ def train_node_classification(args):
     args.num_node_classes = node_data_helper.num_class
     node_features = node_data_helper.node_features
     #########################################################################
-    logging.info('*' * 75)
+    logger.info('*' * 75)
     for key, value in vars(args).items():
-        logging.info('Hype-parameter\t{} = {}'.format(key, value))
-    logging.info('*' * 75)
+        logger.info('Hype-parameter\t{} = {}'.format(key, value))
+    logger.info('*' * 75)
     for key, value in vars(args).items():
         if 'number' in key or 'emb_dim' in key:
-            logging.info('Hype-parameter\t{} = {}'.format(key, value))
-    logging.info('*' * 75)
+            logger.info('Hype-parameter\t{} = {}'.format(key, value))
+    logger.info('*' * 75)
     #########################################################################
     train_dataloader = node_data_helper.data_loader(data_type='train')
-    logging.info('Loading training data = {} completed'.format(len(train_dataloader)))
-    logging.info('*' * 75)
+    logger.info('Loading training data = {} completed'.format(len(train_dataloader)))
+    logger.info('*' * 75)
     # **********************************************************************************
     graph_encoder = GraphSimSiamEncoder(config=args)
     graph_encoder.init(graph_node_emb=node_features, node_freeze=True)
@@ -102,7 +106,7 @@ def train_node_classification(args):
     model.to(args.device)
     logging.info('Model Parameter Configuration:')
     for name, param in model.named_parameters():
-        logging.info('Parameter {}: {}, require_grad = {}'.format(name, str(param.size()),
+        logger.info('Parameter {}: {}, require_grad = {}'.format(name, str(param.size()),
                                                                   str(param.requires_grad)))
     # **********************************************************************************
     loss_fcn = torch.nn.CrossEntropyLoss(ignore_index=IGNORE_IDX)
@@ -114,7 +118,7 @@ def train_node_classification(args):
     best_valid_accuracy = 0.0
     test_acc = 0.0
     # **********************************************************************************
-    logging.info('Starting fine tuning the model...')
+    logger.info('Starting fine tuning the model...')
     train_iterator = trange(start_epoch, start_epoch + int(args.num_train_epochs), desc="Epoch",
                             disable=args.local_rank not in [-1, 0])
     for epoch_idx in train_iterator:
@@ -136,22 +140,22 @@ def train_node_classification(args):
             model.zero_grad()
             global_step = global_step + 1
             if global_step % args.logging_steps == 0:
-                logging.info('Loss at step {} = {:.5f}'.format(global_step, loss.data.item()))
+                logger.info('Loss at step {} = {:.5f}'.format(global_step, loss.data.item()))
         if (epoch_idx + 1) % 2 == 0:
             eval_acc = evaluate_node_classification_model(model=model, node_data_helper=node_data_helper, args=args)
             if eval_acc > best_valid_accuracy:
                 best_valid_accuracy = eval_acc
                 test_acc = evaluate_node_classification_model(model=model, node_data_helper=node_data_helper, args=args,
                                                               data_type='test')
-            logging.info('Best valid | current valid | test accuracy = {:.5f} | {:.5f} | {:.5f}'.format(
+            logger.info('Best valid | current valid | test accuracy = {:.5f} | {:.5f} | {:.5f}'.format(
                 best_valid_accuracy, eval_acc, test_acc))
-    logging.info('Best valid | test accuracy = {:.5f} | {:.5f}'.format(best_valid_accuracy, test_acc))
+    logger.info('Best valid | test accuracy = {:.5f} | {:.5f}'.format(best_valid_accuracy, test_acc))
     return best_valid_accuracy, test_acc
 
 
 def evaluate_node_classification_model(model, node_data_helper, args, data_type='valid'):
     val_dataloader = node_data_helper.data_loader(data_type=data_type)
-    logging.info('Loading {} data = {} completed'.format(data_type, len(val_dataloader)))
+    logger.info('Loading {} data = {} completed'.format(data_type, len(val_dataloader)))
     epoch_iterator = tqdm(val_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
     model.eval()
     total_correct = 0.0
@@ -184,16 +188,16 @@ def hyper_parameter_tuning_rand_search(args):
                                                                     seed=args.seed + _)
         best_val_acc, best_test_acc = train_node_classification(args=args)
         acc_list.append((hyper_setting_i, best_val_acc, best_test_acc))
-        logging.info('*' * 50)
-        logging.info('{}\t{:.4f}\t{:.4f}'.format(hyper_setting_i, best_val_acc, best_test_acc))
-        logging.info('*' * 50)
+        logger.info('*' * 50)
+        logger.info('{}\t{:.4f}\t{:.4f}'.format(hyper_setting_i, best_val_acc, best_test_acc))
+        logger.info('*' * 50)
         if search_best_val_acc < best_val_acc:
             search_best_val_acc = best_val_acc
             search_best_test_acc = best_test_acc
             search_best_settings = hyper_setting_i
-        logging.info('Current best testing acc = {:.4f} and best dev acc = {}'.format(search_best_test_acc,
+        logger.info('Current best testing acc = {:.4f} and best dev acc = {}'.format(search_best_test_acc,
                                                                                      search_best_val_acc))
-        logging.info('*' * 30)
+        logger.info('*' * 30)
     for _, setting_acc in enumerate(acc_list):
         print(_, setting_acc)
     print(search_best_test_acc)
