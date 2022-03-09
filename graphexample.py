@@ -50,13 +50,26 @@ def ER(n, p):
 # A6 = torch.matmul(A5, A_n)
 # print(A6)
 
-src_nodes = [0, 0, 1, 2, 3, 3, 4]
-dst_nodes = [1, 2, 2, 3, 4, 5, 5]
+src_nodes = [0, 0, 0]
+dst_nodes = [1, 2, 3]
 
 graph = dgl.graph((src_nodes + dst_nodes, dst_nodes +  src_nodes))
-print(graph)
+# print(graph)
 graph.edata['rid'] = torch.zeros(graph.number_of_edges())
-print(graph.nodes())
+# print(graph.nodes())
+from utils.graph_aug_metrics import local_cluster_coefficients, degree_distribution
+
+# print(graph.out_degrees().cpu().detach().numpy())
+
+# x = graph.adj(scipy_fmt='coo').toarray()
+# print(type(x))
+# print(x)
+
+y = local_cluster_coefficients(graph=graph)
+print(y)
+y = degree_distribution(graph=graph)
+print(y)
+
 #
 from utils.graph_utils import sub_graph_neighbor_sample
 
