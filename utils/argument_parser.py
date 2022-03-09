@@ -113,6 +113,7 @@ def default_parser():
     parser.add_argument('--gnn_v2', type=boolean_string, default='true')
     parser.add_argument('--feat_drop', type=float, default=0.35)
     parser.add_argument('--attn_drop', type=float, default=0.25)
+    parser.add_argument('--edge_drop', type=float, default=0.0)
     parser.add_argument('--residual', type=boolean_string, default='true')
     parser.add_argument('--diff_head_tail', type=boolean_string, default='true')
     parser.add_argument('--ppr_diff', type=boolean_string, default='true')
