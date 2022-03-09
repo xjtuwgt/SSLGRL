@@ -2,6 +2,7 @@ import networkx as nx
 from itertools import combinations
 from random import random
 import dgl
+import numpy as np
 import torch
 from dgl.sampling import sample_neighbors
 
@@ -67,14 +68,48 @@ from utils.graph_utils import sub_graph_neighbor_sample
 # print(edge_dict)
 # print(node_arw_label_dict)
 
-src_nodes = [0, 0, 0, 1]
-dst_nodes = [1, 2, 3, 2]
-graph = dgl.graph((src_nodes + dst_nodes, dst_nodes + src_nodes))
-graph.edata['rid'] = torch.zeros(graph.number_of_edges(), dtype=torch.long)
-
-neighbors_dict, node_arw_label_dict, edge_dict = \
-    sub_graph_neighbor_sample(graph=graph, anchor_node_ids=torch.LongTensor([0]),
-                              cls_node_ids=torch.LongTensor([4]), fanouts=[-1, -1])
-print(neighbors_dict)
-print(node_arw_label_dict)
-print(edge_dict)
+# src_nodes = [0, 0, 0, 1]
+# dst_nodes = [1, 2, 3, 2]
+# graph = dgl.graph((src_nodes + dst_nodes, dst_nodes + src_nodes))
+# graph.edata['rid'] = torch.zeros(graph.number_of_edges(), dtype=torch.long)
+#
+# neighbors_dict, node_arw_label_dict, edge_dict = \
+#     sub_graph_neighbor_sample(graph=graph, anchor_node_ids=torch.LongTensor([0]),
+#                               cls_node_ids=torch.LongTensor([4]), fanouts=[-1, -1])
+# print(neighbors_dict)
+# print(node_arw_label_dict)
+# print(edge_dict)
+z = np.array([[2,2,2]] * 3)
+z[1][0] = 1
+z[1][1] = 1
+z[1][2] = 1
+x = np.array([[1, 0.8, 0], [0.8, 1, 0.8], [0, 0.8, 1.0]])
+x = x / x.sum(axis=0)[:,None]
+print(np.matmul(x, z))
+# print(x)
+norm_x = np.eye(3) - 0.3 * x
+# print(norm_x)
+inv_x = np.linalg.inv(norm_x)
+# print(inv_x)
+print(np.matmul(inv_x, z))
+# print(x)
+# x2 = np.matmul(x,x)
+# print(x2)
+# x3 = np.matmul(x2, x)
+# print(x3)
+# x4 = np.matmul(x3, x)
+# print(x4)
+# z = np.ones((4,3))
+z = np.array([[2,2,2]] * 4)
+z[1][0] = 1
+z[1][1] = 1
+z[1][2] = 1
+x = np.array([[1,0.8,0,0], [0.8, 1, 0.8, 0.8], [0, 0.8, 1, 0], [0, 0.8, 0, 1]])
+x = x / x.sum(axis=0)[:,None]
+print(np.matmul(x, z))
+# print(x)
+norm_x = np.eye(4) - 0.3 * x
+# print(norm_x)
+inv_x = np.linalg.inv(norm_x)
+# print(inv_x)
+print(np.matmul(inv_x, z))
