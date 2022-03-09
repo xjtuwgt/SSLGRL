@@ -50,12 +50,13 @@ def ER(n, p):
 # A6 = torch.matmul(A5, A_n)
 # print(A6)
 
-# src_nodes = [0, 0, 1, 2, 3, 3, 4]
-# dst_nodes = [1, 2, 2, 3, 4, 5, 5]
-#
-# graph = dgl.graph((src_nodes + dst_nodes, dst_nodes +  src_nodes))
-# print(graph)
-# graph.edata['rid'] = torch.zeros(graph.number_of_edges())
+src_nodes = [0, 0, 1, 2, 3, 3, 4]
+dst_nodes = [1, 2, 2, 3, 4, 5, 5]
+
+graph = dgl.graph((src_nodes + dst_nodes, dst_nodes +  src_nodes))
+print(graph)
+graph.edata['rid'] = torch.zeros(graph.number_of_edges())
+print(graph.nodes())
 #
 from utils.graph_utils import sub_graph_neighbor_sample
 
@@ -79,37 +80,37 @@ from utils.graph_utils import sub_graph_neighbor_sample
 # print(neighbors_dict)
 # print(node_arw_label_dict)
 # print(edge_dict)
-z = np.array([[2,2,2]] * 3)
-z[1][0] = 1
-z[1][1] = 1
-z[1][2] = 1
-x = np.array([[1, 0.8, 0], [0.8, 1, 0.8], [0, 0.8, 1.0]])
-x = x / x.sum(axis=0)[:,None]
-print(np.matmul(x, z))
-# print(x)
-norm_x = np.eye(3) - 0.3 * x
-# print(norm_x)
-inv_x = np.linalg.inv(norm_x)
-# print(inv_x)
-print(np.matmul(inv_x, z))
-# print(x)
-# x2 = np.matmul(x,x)
-# print(x2)
-# x3 = np.matmul(x2, x)
-# print(x3)
-# x4 = np.matmul(x3, x)
-# print(x4)
-# z = np.ones((4,3))
-z = np.array([[2,2,2]] * 4)
-z[1][0] = 1
-z[1][1] = 1
-z[1][2] = 1
-x = np.array([[1,0.8,0,0], [0.8, 1, 0.8, 0.8], [0, 0.8, 1, 0], [0, 0.8, 0, 1]])
-x = x / x.sum(axis=0)[:,None]
-print(np.matmul(x, z))
-# print(x)
-norm_x = np.eye(4) - 0.3 * x
-# print(norm_x)
-inv_x = np.linalg.inv(norm_x)
-# print(inv_x)
-print(np.matmul(inv_x, z))
+# z = np.array([[2,2,2]] * 3)
+# z[1][0] = 1
+# z[1][1] = 1
+# z[1][2] = 1
+# x = np.array([[1, 0.8, 0], [0.8, 1, 0.8], [0, 0.8, 1.0]])
+# x = x / x.sum(axis=0)[:,None]
+# print(np.matmul(x, z))
+# # print(x)
+# norm_x = np.eye(3) - 0.3 * x
+# # print(norm_x)
+# inv_x = np.linalg.inv(norm_x)
+# # print(inv_x)
+# print(np.matmul(inv_x, z))
+# # print(x)
+# # x2 = np.matmul(x,x)
+# # print(x2)
+# # x3 = np.matmul(x2, x)
+# # print(x3)
+# # x4 = np.matmul(x3, x)
+# # print(x4)
+# # z = np.ones((4,3))
+# z = np.array([[2,2,2]] * 4)
+# z[1][0] = 1
+# z[1][1] = 1
+# z[1][2] = 1
+# x = np.array([[1,0.8,0,0], [0.8, 1, 0.8, 0.8], [0, 0.8, 1, 0], [0, 0.8, 0, 1]])
+# x = x / x.sum(axis=0)[:,None]
+# print(np.matmul(x, z))
+# # print(x)
+# norm_x = np.eye(4) - 0.3 * x
+# # print(norm_x)
+# inv_x = np.linalg.inv(norm_x)
+# # print(inv_x)
+# print(np.matmul(inv_x, z))
