@@ -70,9 +70,16 @@ print(y)
 y = degree_distribution(graph=graph)
 print(y)
 
-#
-from utils.graph_utils import sub_graph_neighbor_sample
+graph.add_edges([1,2], [2,1])
 
+y = local_cluster_coefficients(graph=graph)
+print(y)
+y = degree_distribution(graph=graph)
+print(y)
+
+
+#
+# from utils.graph_utils import sub_graph_neighbor_sample
 #
 # neighbors_dict, node_arw_label_dict, edge_dict = \
 #     sub_graph_neighbor_sample(graph=graph, anchor_node_ids=torch.LongTensor([0]),
